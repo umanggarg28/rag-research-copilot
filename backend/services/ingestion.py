@@ -1,7 +1,7 @@
 """
 ingestion.py — Full PDF → chunks → embeddings → ChromaDB pipeline.
 
-This is the MODULE 2 component: Information Retrieval setup.
+This is the ingestion component: Information Retrieval setup.
 Before you can answer any questions, you must build your index.
 
 The pipeline has 4 stages:
@@ -10,8 +10,8 @@ The pipeline has 4 stages:
 Think of ChromaDB as your vector database:
   - Like a regular database, but rows are stored as mathematical vectors
   - Instead of SQL WHERE clauses, you search by semantic similarity
-  - Weaviate (used in the course) works exactly the same way — ChromaDB is
-    just a simpler local alternative (no Docker, no config)
+  - ChromaDB is a lightweight local alternative to hosted vector databases
+    (no Docker, no config, persistent on disk)
 
 Data stored per chunk in ChromaDB:
   - The text itself (document)

@@ -1,7 +1,7 @@
 # AI Research Copilot — RAG System
 
 A production-grade Retrieval Augmented Generation (RAG) system for querying research papers.
-Built module-by-module to match the DeepLearning.ai RAG course structure.
+Built from scratch with hybrid search, citation tracking, and a clean React UI.
 
 ---
 
@@ -45,7 +45,7 @@ rag-research-copilot/
 ├── retrieval/
 │   ├── embedder.py       # sentence-transformers wrapper
 │   └── bm25_search.py    # BM25 keyword search + RRF hybrid fusion
-├── evaluation/           # Module 5: RAG quality metrics (TODO)
+├── evaluation/           # RAG quality metrics (TODO)
 ├── ui/                   # React frontend (TODO)
 ├── data/
 │   ├── papers/           # Drop PDFs here
@@ -63,7 +63,7 @@ rag-research-copilot/
 | LLM | Claude (Anthropic) | Best instruction-following, large context |
 | Embeddings | `all-MiniLM-L6-v2` | Free, local, 384-dim, strong quality |
 | Vector DB | ChromaDB | Local persistent store, no Docker needed |
-| Keyword search | BM25 (rank-bm25) | Same algorithm as the DeepLearning.ai course |
+| Keyword search | BM25 (rank-bm25) | Battle-tested probabilistic ranking function |
 | Hybrid fusion | RRF (from scratch) | Rank-based, handles different score scales |
 | API | FastAPI | Async, auto-docs at `/docs` |
 
@@ -157,13 +157,14 @@ Response includes:
 
 ---
 
-## Modules Progress
+## Build Status
 
-- [x] **Module 1** — Architecture, project skeleton, core concepts
-- [x] **Module 2** — Ingestion pipeline (PDF → chunks → embeddings → ChromaDB)
-- [x] **Module 3** — Retriever API (semantic, keyword, hybrid search)
-- [x] **Module 4** — LLM integration (augmented generation with citations)
-- [ ] **Module 5** — Production features (evaluation, monitoring, reranking, UI)
+- [x] Architecture, project skeleton, core concepts
+- [x] Ingestion pipeline (PDF → chunks → embeddings → ChromaDB)
+- [x] Retriever API (semantic, keyword, hybrid search)
+- [x] LLM integration (augmented generation with citations)
+- [x] React UI (upload, chat, citations, search mode controls)
+- [ ] Production features (evaluation, monitoring, reranking)
 
 ---
 

@@ -4,8 +4,7 @@ demo_concepts.py — Interactive walkthrough of every RAG building block.
 Run this to see what each component actually does:
   python demo_concepts.py
 
-This mirrors the hands-on notebooks in the DeepLearning.ai course —
-you can see the intermediate outputs at every step of the pipeline.
+Run this to see the intermediate outputs at every step of the pipeline.
 """
 
 import sys

@@ -13,7 +13,6 @@ BM25 (keyword search) excels at these cases because it looks for
 EXACT WORD MATCHES, weighted by how rare/informative each word is.
 
 The best RAG systems use BOTH — this is called Hybrid Search.
-(Module 2 of the DeepLearning.ai course covers this.)
 
 WHAT IS BM25?
 =============

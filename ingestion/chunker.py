@@ -15,16 +15,16 @@ So we split papers into small, overlapping chunks. Then:
   - A query retrieves only the 5 most relevant chunks
   - The LLM gets ~4000 tokens of focused context instead of 20,000 tokens of noise
 
-CHUNKING STRATEGIES (from the course):
-=======================================
+CHUNKING STRATEGIES:
+====================
 1. Fixed-size: just split every N chars. Simple but breaks sentences mid-way.
 2. Sentence-based: split on sentence boundaries. Cleaner but variable size.
 3. Recursive: try to split on paragraphs first, then sentences, then words.
    This is what we implement — it preserves semantic units as much as possible.
 4. Semantic: embed sentences and split where meaning changes most. Advanced.
 
-We implement strategy 3 (recursive) — same as what the course teaches as
-the standard approach.
+We implement strategy 3 (recursive) — the standard approach used in
+production RAG systems.
 
 OVERLAP EXPLAINED:
 ==================

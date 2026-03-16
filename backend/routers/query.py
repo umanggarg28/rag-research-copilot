@@ -13,7 +13,7 @@ Why two endpoints?
 
   /query is the full RAG experience users care about.
 
-This separation of concerns is a key lesson from Module 3 & 4 of the course:
+This separation of concerns is a key architectural principle:
 evaluate retrieval and generation INDEPENDENTLY so you can debug which part is failing.
 """
 

@@ -891,7 +891,7 @@ POST /query          → full RAG: retrieval + LLM generation
   ❌ Slower (LLM call adds ~1-3 seconds)
   ✅ Use for: the main chat interface
 
-The separation is a key lesson from the course:
+This separation is a key architectural principle:
   Evaluate RETRIEVAL and GENERATION independently.
   If the answer is wrong, was retrieval bad? Or was generation bad?
   /search lets you check retrieval in isolation.
@@ -1163,4 +1163,4 @@ python demo_concepts.py
 
 ---
 
-*Next: Module 5 — cross-encoder reranking, evaluation pipeline, React UI, deployment*
+*Next: cross-encoder reranking, evaluation pipeline, deployment*

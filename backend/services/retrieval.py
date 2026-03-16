@@ -1,15 +1,15 @@
 """
-retrieval.py — The semantic + hybrid search engine (Module 3).
+retrieval.py — The semantic + hybrid search engine.
 
 This service answers: "Given a query, what chunks are most relevant?"
 
-Three search modes (mirrors the DeepLearning.ai course):
+Three search modes:
   1. Semantic search  — embedding similarity (cosine distance)
   2. Keyword search   — BM25 exact token matching
   3. Hybrid search    — RRF fusion of both (best quality)
 
-The course teaches that production RAG systems almost always use hybrid search
-because neither semantic nor keyword search alone is sufficient.
+Production RAG systems almost always use hybrid search because neither
+semantic nor keyword search alone is sufficient.
 
 Example where each mode wins:
   Query: "What is the BLEU score on WMT 2014?"
