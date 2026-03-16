@@ -88,7 +88,7 @@ async def query(
         query=request.question,
         top_k=request.top_k,
         source_filter=request.source_filter,
-        mode="hybrid",
+        mode=request.mode,
     )
 
     if not results:

@@ -30,6 +30,7 @@ class QueryRequest(BaseModel):
         None,
         description="If set, only search within this paper (use the 'source' name from /ingest/list)"
     )
+    mode: Literal["semantic", "keyword", "hybrid"] = Field("hybrid", description="Search mode")
 
     class Config:
         json_schema_extra = {

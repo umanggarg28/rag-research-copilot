@@ -28,8 +28,8 @@ export async function deleteDocument(source) {
   return res.json();
 }
 
-export async function queryRAG(question, topK = 5, sourceFilter = null) {
-  const body = { question, top_k: topK };
+export async function queryRAG(question, topK = 5, sourceFilter = null, mode = 'hybrid') {
+  const body = { question, top_k: topK, mode };
   if (sourceFilter) body.source_filter = sourceFilter;
   const res = await fetch(`${BASE}/query`, {
     method: 'POST',

@@ -4,11 +4,14 @@ import { uploadPDF, deleteDocument } from '../api';
 export default function Sidebar({ docs, onDocsChange, sourceFilter, onFilterChange }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [dragging, setDragging] = useState(false);
   const fileRef = useRef();
 
-  async function handleUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+  async function ingest(file) {
+    if (!file || !file.name.endsWith('.pdf')) {
+      setUploadError('Only PDF files are supported.');
+      return;
+    }
     setUploading(true);
     setUploadError('');
     try {
@@ -18,8 +21,16 @@ export default function Sidebar({ docs, onDocsChange, sourceFilter, onFilterChan
       setUploadError(err.message);
     } finally {
       setUploading(false);
-      fileRef.current.value = '';
+      if (fileRef.current) fileRef.current.value = '';
     }
+  }
+
+  function handleFileInput(e) { ingest(e.target.files[0]); }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragging(false);
+    ingest(e.dataTransfer.files[0]);
   }
 
   async function handleDelete(source) {
@@ -34,56 +45,90 @@ export default function Sidebar({ docs, onDocsChange, sourceFilter, onFilterChan
   }
 
   return (
-    <aside style={styles.sidebar}>
-      <div style={styles.brand}>
-        <span style={styles.brandIcon}>📚</span>
-        <span style={styles.brandText}>Research Copilot</span>
-      </div>
-
-      {/* Upload */}
-      <div style={styles.section}>
-        <p style={styles.sectionLabel}>KNOWLEDGE BASE</p>
-        <button style={styles.uploadBtn} onClick={() => fileRef.current.click()} disabled={uploading}>
-          {uploading ? '⏳ Ingesting…' : '+ Upload PDF'}
-        </button>
-        <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={handleUpload} />
-        {uploadError && <p style={styles.error}>{uploadError}</p>}
-      </div>
-
-      {/* Document list */}
-      <div style={{ ...styles.section, flex: 1, overflowY: 'auto' }}>
-        {docs.length === 0 ? (
-          <p style={styles.empty}>No papers yet.<br />Upload a PDF to get started.</p>
-        ) : (
-          docs.map(doc => (
-            <div
-              key={doc.source}
-              style={{ ...styles.docItem, ...(sourceFilter === doc.source ? styles.docActive : {}) }}
-              onClick={() => onFilterChange(sourceFilter === doc.source ? null : doc.source)}
-            >
-              <div style={styles.docInfo}>
-                <span style={styles.docName}>{doc.source}</span>
-                <span style={styles.docMeta}>{doc.chunks} chunks</span>
-              </div>
-              <button
-                style={styles.deleteBtn}
-                onClick={e => { e.stopPropagation(); handleDelete(doc.source); }}
-                title="Remove"
-              >×</button>
-            </div>
-          ))
-        )}
-      </div>
-
-      {sourceFilter && (
-        <div style={styles.filterBadge}>
-          Searching in: <strong>{sourceFilter}</strong>
-          <button style={styles.clearFilter} onClick={() => onFilterChange(null)}>✕ clear</button>
+    <aside style={s.sidebar}>
+      {/* Brand */}
+      <div style={s.brand}>
+        <div style={s.brandLogo}>📚</div>
+        <div>
+          <div style={s.brandTitle}>Research Copilot</div>
+          <div style={s.brandSub}>RAG · Grounded answers</div>
         </div>
-      )}
+      </div>
 
-      <div style={styles.footer}>
-        <a href="http://localhost:8000/docs" target="_blank" rel="noreferrer" style={styles.footerLink}>
+      {/* Upload zone */}
+      <div style={s.uploadZone}
+        onDragEnter={e => { e.preventDefault(); setDragging(true); }}
+        onDragOver={e => e.preventDefault()}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+      >
+        <button
+          style={{ ...s.uploadBtn, ...(dragging ? s.uploadBtnDrag : {}) }}
+          onClick={() => fileRef.current.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <span style={s.uploadingRow}>
+              <span style={s.spinner} />
+              Ingesting…
+            </span>
+          ) : dragging ? '📂 Drop PDF here' : '+ Upload PDF'}
+        </button>
+        <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={handleFileInput} />
+        {uploadError && <p style={s.error}>{uploadError}</p>}
+        {!uploadError && <p style={s.uploadHint}>or drag & drop a PDF</p>}
+      </div>
+
+      {/* Documents section */}
+      <div style={s.docsSection}>
+        <div style={s.sectionHeader}>
+          <span style={s.sectionLabel}>DOCUMENTS</span>
+          <span style={s.sectionCount}>{docs.length}</span>
+          {sourceFilter && (
+            <span style={s.filterPill}>
+              filtered
+              <button style={s.filterClear} onClick={() => onFilterChange(null)}>✕</button>
+            </span>
+          )}
+        </div>
+
+        <div style={s.docList}>
+          {docs.length === 0 ? (
+            <div style={s.emptyDocs}>
+              <div style={s.emptyDocsIcon}>📂</div>
+              <div style={s.emptyDocsText}>No papers yet</div>
+              <div style={s.emptyDocsSub}>Upload a PDF above to get started</div>
+            </div>
+          ) : (
+            docs.map(doc => (
+              <div
+                key={doc.source}
+                className="doc-item"
+                style={{ ...s.docItem, ...(sourceFilter === doc.source ? s.docActive : {}) }}
+                onClick={() => onFilterChange(sourceFilter === doc.source ? null : doc.source)}
+                title={doc.source}
+              >
+                <span style={s.docIcon}>📄</span>
+                <div style={s.docInfo}>
+                  <span style={s.docName}>{doc.source}</span>
+                  <span style={s.docMeta}>{doc.chunks} chunks</span>
+                </div>
+                {sourceFilter === doc.source && <span style={s.activeRing} />}
+                <button
+                  className="delete-btn"
+                  style={s.deleteBtn}
+                  onClick={e => { e.stopPropagation(); handleDelete(doc.source); }}
+                  title="Remove from index"
+                >×</button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={s.footer}>
+        <a href="http://localhost:8000/docs" target="_blank" rel="noreferrer" style={s.footerLink}>
           API Docs ↗
         </a>
       </div>
@@ -91,101 +136,158 @@ export default function Sidebar({ docs, onDocsChange, sourceFilter, onFilterChan
   );
 }
 
-const styles = {
+const s = {
   sidebar: {
-    width: 260,
-    minWidth: 260,
+    width: 264,
+    minWidth: 264,
     background: 'var(--bg-panel)',
     borderRight: '1px solid var(--border)',
+    boxShadow: '2px 0 20px rgba(0,0,0,0.35)',
     display: 'flex',
     flexDirection: 'column',
     height: '100vh',
-    padding: '0 0 12px 0',
   },
   brand: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    padding: '20px 16px 16px',
+    gap: 12,
+    padding: '18px 16px',
+    background: 'linear-gradient(135deg, var(--bg-panel) 0%, #1a1f3a 100%)',
     borderBottom: '1px solid var(--border)',
   },
-  brandIcon: { fontSize: 20 },
-  brandText: { fontWeight: 700, fontSize: 15, color: 'var(--text)' },
-  section: { padding: '16px 12px 8px' },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: 'var(--text-dim)',
-    letterSpacing: '0.08em',
-    marginBottom: 8,
-  },
+  brandLogo: { fontSize: 24, lineHeight: 1 },
+  brandTitle: { fontSize: 15, fontWeight: 700, color: 'var(--text)', letterSpacing: '0.02em' },
+  brandSub: { fontSize: 11, color: 'var(--text-faint)', marginTop: 1, letterSpacing: '0.04em' },
+
+  uploadZone: { padding: '14px 12px 8px' },
   uploadBtn: {
     width: '100%',
-    padding: '9px 0',
-    background: 'var(--accent-dim)',
-    color: 'var(--text)',
+    padding: '10px 0',
+    background: 'linear-gradient(135deg, var(--accent-dim) 0%, #5570d4 100%)',
+    color: '#fff',
     border: 'none',
-    borderRadius: 'var(--radius)',
+    borderRadius: 'var(--r-md)',
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'background 0.15s',
+    boxShadow: '0 2px 12px rgba(108,143,255,0.25)',
+    transition: 'all 0.15s',
+    letterSpacing: '0.02em',
   },
+  uploadBtnDrag: {
+    background: 'var(--accent-glow)',
+    border: '2px dashed var(--accent)',
+    boxShadow: '0 0 0 3px var(--accent-glow)',
+  },
+  uploadingRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  spinner: {
+    display: 'inline-block',
+    width: 12,
+    height: 12,
+    border: '2px solid rgba(255,255,255,0.3)',
+    borderTopColor: '#fff',
+    borderRadius: '50%',
+    animation: 'spin 0.7s linear infinite',
+  },
+  uploadHint: { fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', marginTop: 6 },
   error: { color: 'var(--red)', fontSize: 12, marginTop: 6 },
-  empty: { color: 'var(--text-dim)', fontSize: 13, lineHeight: 1.6 },
-  docItem: {
+
+  docsSection: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '4px 0' },
+  sectionHeader: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '8px 10px',
-    borderRadius: 8,
-    cursor: 'pointer',
-    marginBottom: 4,
-    border: '1px solid transparent',
-    transition: 'background 0.1s',
+    gap: 6,
+    padding: '8px 16px',
   },
-  docActive: {
+  sectionLabel: { fontSize: 11, fontWeight: 600, color: 'var(--text-faint)', letterSpacing: '0.08em' },
+  sectionCount: {
+    fontSize: 11,
     background: 'var(--bg-input)',
-    border: '1px solid var(--accent-dim)',
-  },
-  docInfo: { display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden' },
-  docName: { fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  docMeta: { fontSize: 11, color: 'var(--text-dim)' },
-  deleteBtn: {
-    background: 'none',
-    border: 'none',
     color: 'var(--text-dim)',
-    cursor: 'pointer',
-    fontSize: 16,
-    lineHeight: 1,
-    padding: '0 2px',
-    flexShrink: 0,
+    borderRadius: 20,
+    padding: '0 6px',
+    fontWeight: 600,
   },
-  filterBadge: {
-    margin: '0 12px 8px',
-    padding: '8px 10px',
-    background: 'var(--bg-input)',
-    border: '1px solid var(--accent-dim)',
-    borderRadius: 8,
-    fontSize: 12,
-    color: 'var(--text-dim)',
+  filterPill: {
+    marginLeft: 'auto',
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
     gap: 4,
+    fontSize: 11,
+    color: 'var(--accent)',
+    background: 'var(--accent-glow)',
+    border: '1px solid var(--accent-border)',
+    borderRadius: 20,
+    padding: '1px 8px',
   },
-  clearFilter: {
+  filterClear: {
     background: 'none',
     border: 'none',
     color: 'var(--accent)',
     cursor: 'pointer',
     fontSize: 12,
     padding: 0,
-    textAlign: 'left',
+    lineHeight: 1,
   },
+
+  docList: { flex: 1, overflowY: 'auto', padding: '0 8px' },
+  docItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '8px 10px',
+    borderRadius: 'var(--r-md)',
+    cursor: 'pointer',
+    marginBottom: 3,
+    transition: 'background 0.15s',
+    border: '1px solid transparent',
+    position: 'relative',
+  },
+  docActive: {
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--accent-border)',
+  },
+  docIcon: { fontSize: 15, flexShrink: 0 },
+  docInfo: { flex: 1, overflow: 'hidden' },
+  docName: {
+    display: 'block',
+    fontSize: 13,
+    color: 'var(--text)',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontWeight: 500,
+  },
+  docMeta: { fontSize: 11, color: 'var(--text-dim)' },
+  activeRing: {
+    display: 'inline-block',
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    background: 'var(--accent)',
+    flexShrink: 0,
+  },
+  deleteBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--text-dim)',
+    cursor: 'pointer',
+    fontSize: 18,
+    lineHeight: 1,
+    padding: '0 2px',
+    flexShrink: 0,
+  },
+  emptyDocs: {
+    textAlign: 'center',
+    padding: '32px 16px',
+  },
+  emptyDocsIcon: { fontSize: 32, marginBottom: 8 },
+  emptyDocsText: { fontSize: 13, color: 'var(--text-dim)', fontWeight: 500 },
+  emptyDocsSub: { fontSize: 12, color: 'var(--text-faint)', marginTop: 4 },
+
   footer: {
-    padding: '8px 16px 0',
+    padding: '10px 16px',
     borderTop: '1px solid var(--border)',
-    marginTop: 'auto',
   },
-  footerLink: { fontSize: 12, color: 'var(--text-dim)', textDecoration: 'none' },
+  footerLink: { fontSize: 12, color: 'var(--text-faint)', textDecoration: 'none' },
 };

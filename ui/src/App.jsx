@@ -13,36 +13,27 @@ export default function App() {
   const [sourceFilter, setSourceFilter] = useState(null);
 
   const refreshDocs = useCallback(async () => {
-    try {
-      const data = await listDocuments();
-      setDocs(data);
-    } catch {
-      // backend not ready yet
-    }
+    try { setDocs(await listDocuments()); } catch {}
   }, []);
 
-  // Load documents on mount
   useEffect(() => { refreshDocs(); }, [refreshDocs]);
 
-  async function handleSend(question) {
-    // Add user message immediately
+  async function handleSend(question, mode, topK) {
     const userMsg = { id: ++msgId, role: 'user', content: question };
     const loadingMsg = { id: ++msgId, role: 'assistant', loading: true };
     setMessages(prev => [...prev, userMsg, loadingMsg]);
     setLoading(true);
 
+    const t0 = Date.now();
     try {
-      const result = await queryRAG(question, 5, sourceFilter);
+      const result = await queryRAG(question, topK, sourceFilter, mode);
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
       setMessages(prev => prev.map(m =>
-        m.id === loadingMsg.id
-          ? { ...m, loading: false, ...result }
-          : m
+        m.id === loadingMsg.id ? { ...m, loading: false, ...result, elapsed } : m
       ));
     } catch (err) {
       setMessages(prev => prev.map(m =>
-        m.id === loadingMsg.id
-          ? { ...m, loading: false, error: err.message }
-          : m
+        m.id === loadingMsg.id ? { ...m, loading: false, error: err.message } : m
       ));
     } finally {
       setLoading(false);
@@ -50,22 +41,27 @@ export default function App() {
   }
 
   return (
-    <div style={styles.app}>
+    <div style={s.app}>
       <Sidebar
         docs={docs}
         onDocsChange={refreshDocs}
         sourceFilter={sourceFilter}
         onFilterChange={setSourceFilter}
       />
-      <div style={styles.main}>
+      <div style={s.main}>
         <ChatWindow messages={messages} sourceFilter={sourceFilter} />
-        <ChatInput onSend={handleSend} disabled={loading} />
+        <ChatInput
+          onSend={handleSend}
+          onClear={() => setMessages([])}
+          disabled={loading}
+          hasMessages={messages.length > 0}
+        />
       </div>
     </div>
   );
 }
 
-const styles = {
+const s = {
   app: { display: 'flex', height: '100vh', overflow: 'hidden' },
   main: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
 };
