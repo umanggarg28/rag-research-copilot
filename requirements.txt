@@ -1,0 +1,31 @@
+# LLM
+anthropic>=0.40.0
+
+# Vector database (local, no Docker needed — same concepts as Weaviate)
+chromadb>=0.5.0
+
+# PDF processing
+pypdf>=4.0.0
+
+# Embeddings — runs locally, no API cost
+# all-MiniLM-L6-v2: 384-dim vectors, fast CPU inference
+sentence-transformers>=3.0.0
+
+# BM25 keyword search (same algorithm as the course uses)
+rank-bm25>=0.2.2
+
+# Reranking with cross-encoder (course Module 3)
+# cross-encoder/ms-marco-MiniLM-L-6-v2 is the standard reranker
+# (included in sentence-transformers)
+
+# API server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# Config & utilities
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+numpy>=1.26.0

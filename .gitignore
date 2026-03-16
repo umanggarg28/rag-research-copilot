@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+data/chroma/
+data/papers/
+*.pdf
+node_modules/
+.DS_Store
+dist/
+build/
