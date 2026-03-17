@@ -277,6 +277,13 @@ button.ex-chip:active {
   background: var(--accent-glow) !important;
 }
 
+/* Confirm-delete button — red only on hover */
+.doc-item .confirm-row button:first-child:hover,
+.session-item > div button:first-child:hover {
+  color: var(--red) !important;
+  border-color: var(--red) !important;
+}
+
 /* Sidebar upload button hover */
 label[aria-label="Upload a PDF file"]:not([style*="not-allowed"]):hover {
   filter: brightness(0.97);

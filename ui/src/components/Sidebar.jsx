@@ -399,11 +399,12 @@ const s = {
   },
   confirmRow: { display: 'flex', gap: 4, flexShrink: 0 },
   confirmYes: {
-    background: 'rgba(248,113,113,0.15)', border: '1px solid var(--red)', color: 'var(--red)',
-    borderRadius: 'var(--r-sm)', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: '2px 8px', fontFamily: 'inherit',
+    background: 'none', border: '1px solid var(--border)', color: 'var(--text-dim)',
+    borderRadius: 'var(--r-sm)', fontSize: 11, fontWeight: 500, cursor: 'pointer', padding: '2px 8px', fontFamily: 'inherit',
+    transition: 'color 0.15s, border-color 0.15s',
   },
   confirmNo: {
-    background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-dim)',
+    background: 'none', border: '1px solid var(--border)', color: 'var(--text-faint)',
     borderRadius: 'var(--r-sm)', fontSize: 11, cursor: 'pointer', padding: '2px 8px', fontFamily: 'inherit',
   },
   emptyDocs: { textAlign: 'center', padding: '20px 16px' },
