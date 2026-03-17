@@ -13,13 +13,14 @@ function timeAgo(iso) {
 
 export default function Sidebar({
   docs, onDocsChange, sourceFilter, onFilterChange,
-  sessions, onLoadSession,
+  sessions, onLoadSession, onDeleteSession,
   collapsed, onToggleCollapse,
 }) {
   const [uploading, setUploading]       = useState(false);
   const [uploadError, setUploadError]   = useState('');
   const [dragging, setDragging]         = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDeleteSession, setConfirmDeleteSession] = useState(null);
   const fileRef = useRef();
 
   async function ingest(file) {
@@ -246,17 +247,35 @@ export default function Sidebar({
           </div>
           <div style={s.sessionList}>
             {sessions.slice(0, 5).map(sess => (
-              <button key={sess.id} style={s.sessionItem} onClick={() => onLoadSession(sess)}
-                title={sess.title} aria-label={`Load session: ${sess.title}`}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
-                <div style={s.sessionInfo}>
-                  <span style={s.sessionTitle}>{sess.title}</span>
-                  <span style={s.sessionTime}>{timeAgo(sess.timestamp)}</span>
-                </div>
-              </button>
+              <div key={sess.id} className="session-item" style={s.sessionItemWrap}>
+                <button style={s.sessionItem} onClick={() => onLoadSession(sess)}
+                  title={sess.title} aria-label={`Load session: ${sess.title}`}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <div style={s.sessionInfo}>
+                    <span style={s.sessionTitle}>{sess.title}</span>
+                    <span style={s.sessionTime}>{timeAgo(sess.timestamp)}</span>
+                  </div>
+                </button>
+                {confirmDeleteSession === sess.id ? (
+                  <div style={{ display: 'flex', gap: 3, flexShrink: 0, padding: '2px 0' }}>
+                    <button style={s.confirmYes} onClick={() => { onDeleteSession(sess.id); setConfirmDeleteSession(null); }}>Remove</button>
+                    <button style={s.confirmNo}  onClick={() => setConfirmDeleteSession(null)}>Cancel</button>
+                  </div>
+                ) : (
+                  <button className="session-delete-btn" style={s.deleteBtn}
+                    onClick={e => { e.stopPropagation(); setConfirmDeleteSession(sess.id); }}
+                    aria-label={`Delete session: ${sess.title}`}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                      <path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </nav>
@@ -379,10 +398,14 @@ const s = {
 
   sessionsSection: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '4px 0', borderTop: '1px solid var(--border-dim)' },
   sessionList:  { overflowY: 'auto', padding: '0 8px', flex: 1 },
+  sessionItemWrap: {
+    display: 'flex', alignItems: 'center', gap: 2,
+    borderRadius: 'var(--r-md)', marginBottom: 2,
+  },
   sessionItem: {
-    display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%',
+    display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1, minWidth: 0,
     padding: '7px 10px', borderRadius: 'var(--r-md)', cursor: 'pointer',
-    marginBottom: 2, background: 'none', border: 'none', fontFamily: 'inherit',
+    background: 'none', border: 'none', fontFamily: 'inherit',
     textAlign: 'left', transition: 'background 0.15s',
   },
   sessionInfo: { flex: 1, overflow: 'hidden' },

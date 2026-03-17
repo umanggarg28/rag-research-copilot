@@ -134,6 +134,11 @@ body {
 .doc-item:hover .delete-btn { opacity: 1; }
 .doc-item:hover { background: var(--bg-surface) !important; }
 
+/* Hover-reveal delete for session items */
+.session-item .session-delete-btn { opacity: 0; transition: opacity 0.15s; }
+.session-item:hover .session-delete-btn { opacity: 1; }
+.session-item:hover button:first-child { background: var(--bg-surface) !important; }
+
 /* Example chips hover */
 button.ex-chip:hover,
 [style*="borderLeft: '3px solid var(--accent)'"]:hover {

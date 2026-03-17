@@ -17,6 +17,7 @@ export default function App() {
   const [sourceFilter, setSourceFilter] = useState(null);
   const [pendingQuestion, setPendingQuestion] = useState(null);
   const [sessions, setSessions] = useState(loadSessions);
+  const [loadedSessionId, setLoadedSessionId] = useState(null); // tracks if current msgs came from a saved session
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem('sidebar-collapsed') === 'true'
   );
@@ -42,13 +43,23 @@ export default function App() {
   }
 
   function handleClear() {
-    if (messages.length > 0) saveSession(messages);
+    // Only save if messages aren't already a saved session (no new messages added)
+    if (messages.length > 0 && !loadedSessionId) saveSession(messages);
     setMessages([]);
+    setLoadedSessionId(null);
+  }
+
+  function deleteSession(id) {
+    const updated = sessions.filter(s => s.id !== id);
+    setSessions(updated);
+    localStorage.setItem('rag-sessions', JSON.stringify(updated));
   }
 
   function loadSession(session) {
-    if (messages.length > 0) saveSession(messages);
+    // Only save current messages if they're a new unsaved conversation
+    if (messages.length > 0 && !loadedSessionId) saveSession(messages);
     setMessages(session.messages);
+    setLoadedSessionId(session.id);
   }
 
   function toggleSidebar() {
@@ -61,6 +72,7 @@ export default function App() {
     const userMsg    = { id: ++msgId, role: 'user', content: question };
     const loadingMsg = { id: ++msgId, role: 'assistant', loading: true, answer: '' };
     setMessages(prev => [...prev, userMsg, loadingMsg]);
+    setLoadedSessionId(null); // new message means this is no longer the saved session as-is
     setLoading(true);
 
     const t0 = Date.now();
@@ -104,6 +116,7 @@ export default function App() {
         onFilterChange={setSourceFilter}
         sessions={sessions}
         onLoadSession={loadSession}
+        onDeleteSession={deleteSession}
         collapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
       />

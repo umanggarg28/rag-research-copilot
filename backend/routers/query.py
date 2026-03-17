@@ -85,17 +85,18 @@ async def query(
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-    # Step 1: Retrieve relevant chunks
+    # Step 1: Retrieve relevant chunks (threshold=0.3 skips LLM for out-of-domain queries)
     results = retrieval.search(
         query=request.question,
         top_k=request.top_k,
         source_filter=request.source_filter,
         mode=request.mode,
+        relevance_threshold=0.3,
     )
 
     if not results:
         return QueryResponse(
-            answer="No relevant documents found. Please ingest some research papers first.",
+            answer="No relevant content found in your uploaded papers for this question.",
             citations=[],
             retrieved_chunks=[],
             model="none",
@@ -153,11 +154,12 @@ async def query_stream(
         top_k=request.top_k,
         source_filter=request.source_filter,
         mode=request.mode,
+        relevance_threshold=0.3,
     )
 
     if not results:
         async def no_docs():
-            yield f"data: {json.dumps({'type': 'text', 'content': 'No relevant documents found. Please ingest some research papers first.'})}\n\n"
+            yield f"data: {json.dumps({'type': 'text', 'content': 'No relevant content found in your uploaded papers for this question.'})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'citations': [], 'retrieved_chunks': [], 'model': 'none', 'tokens_used': {'input': 0, 'output': 0}})}\n\n"
         return StreamingResponse(no_docs(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

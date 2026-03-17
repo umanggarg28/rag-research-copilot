@@ -66,6 +66,7 @@ class RetrievalService:
         top_k: int = None,
         source_filter: Optional[str] = None,
         mode: Literal["semantic", "keyword", "hybrid"] = "hybrid",
+        relevance_threshold: float = 0.0,
     ) -> list[dict]:
         """
         Main search method. Dispatches to the appropriate search mode.
@@ -86,17 +87,18 @@ class RetrievalService:
         top_k = top_k or settings.top_k
 
         if mode == "semantic":
-            return self._semantic_search(query, top_k, source_filter)
+            return self._semantic_search(query, top_k, source_filter, relevance_threshold=relevance_threshold)
         elif mode == "keyword":
             return self._keyword_search(query, top_k, source_filter)
         else:  # hybrid
-            return self._hybrid_search(query, top_k, source_filter)
+            return self._hybrid_search(query, top_k, source_filter, relevance_threshold)
 
     def _semantic_search(
         self,
         query: str,
         top_k: int,
         source_filter: Optional[str],
+        relevance_threshold: float = 0.0,
     ) -> list[dict]:
         """
         Pure vector similarity search.
@@ -140,14 +142,20 @@ class RetrievalService:
             results["metadatas"][0],
             results["distances"][0],
         ):
+            similarity = round(1 - dist, 4)
             output.append({
                 "text": doc,
                 "source": meta.get("source", ""),
                 "filename": meta.get("filename", ""),
                 "page": meta.get("page", 0),
                 "chunk_index": meta.get("chunk_index", 0),
-                "score": round(1 - dist, 4),
+                "score": similarity,
             })
+
+        # If the best match doesn't clear the threshold, the query is out-of-domain
+        if relevance_threshold > 0 and output:
+            if output[0]["score"] < relevance_threshold:
+                return []
 
         return output
 
@@ -181,6 +189,7 @@ class RetrievalService:
         query: str,
         top_k: int,
         source_filter: Optional[str],
+        relevance_threshold: float = 0.0,
     ) -> list[dict]:
         """
         Hybrid search: semantic + BM25 combined via Reciprocal Rank Fusion.
@@ -192,8 +201,15 @@ class RetrievalService:
         a relevant document that ranked 6th in both (but would be 1st combined).
         Getting 2×top_k from each gives more candidates for RRF to work with.
         """
-        # Get candidates from both systems
+        # First, check relevance via raw semantic similarity.
+        # Cosine similarity is the most reliable out-of-domain signal — BM25 can
+        # return spurious matches for common words (e.g. "US", "conflict") even in
+        # completely unrelated documents, so we must gate on semantic score first.
         semantic = self._semantic_search(query, top_k=top_k * 2, source_filter=source_filter)
+        if relevance_threshold > 0:
+            if not semantic or semantic[0]["score"] < relevance_threshold:
+                return []
+
         keyword = self._keyword_search(query, top_k=top_k * 2, source_filter=source_filter)
 
         if not semantic and not keyword:
