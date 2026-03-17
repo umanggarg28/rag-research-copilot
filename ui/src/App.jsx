@@ -21,6 +21,22 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem('sidebar-collapsed') === 'true'
   );
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem('theme') ?? 'auto'
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme(t => {
+      if (t === 'auto') return 'dark';
+      if (t === 'dark') return 'light';
+      return 'auto';
+    });
+  }
 
   const refreshDocs = useCallback(async () => {
     try { setDocs(await listDocuments()); } catch {}
@@ -119,6 +135,8 @@ export default function App() {
         onDeleteSession={deleteSession}
         collapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
       <div style={s.main}>
         <ChatWindow

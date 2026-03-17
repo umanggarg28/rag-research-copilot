@@ -1,6 +1,35 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+function CodeBlock({ className, children }) {
+  const [copied, setCopied] = useState(false);
+  const lang = className?.replace('language-', '') ?? 'code';
+  const code = String(children).trimEnd();
+  function copy() {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <pre style={{ position: 'relative', margin: '14px 0', overflow: 'hidden', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 12px', background: 'var(--bg-input)', borderBottom: '1px solid var(--border)' }}>
+        <span style={{ fontSize: 11, color: 'var(--text-faint)', fontFamily: '"Anthropic Mono", monospace' }}>{lang}</span>
+        <button onClick={copy} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', color: 'var(--text-faint)', fontSize: 10, cursor: 'pointer', padding: '2px 8px', fontFamily: 'inherit', transition: 'color 0.12s, border-color 0.12s' }}>
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <code style={{ display: 'block', padding: '14px 16px', overflowX: 'auto', background: 'none', color: 'var(--text-dim)', fontSize: 13, lineHeight: 1.7, fontFamily: '"Anthropic Mono", monospace' }}>{children}</code>
+    </pre>
+  );
+}
+
+const mdComponents = {
+  code({ node, inline, className, children, ...props }) {
+    if (inline) return <code style={{ background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 'var(--r-sm)', fontSize: 13, fontFamily: '"Anthropic Mono", monospace', color: 'var(--accent)', border: '1px solid var(--border)' }} {...props}>{children}</code>;
+    return <CodeBlock className={className}>{children}</CodeBlock>;
+  },
+};
+
 // Normalize RRF scores (which top out ~0.06) to a 0-100 relative scale
 function normalizeCitations(citations) {
   if (!citations?.length) return [];
@@ -20,29 +49,25 @@ function normalizeChunks(chunks) {
   }));
 }
 
-// Color-code by confidence tier
-function citationColor(pct) {
-  if (pct >= 70) return { bg: 'var(--green-glow)', border: 'var(--green)', text: 'var(--green)' };
-  if (pct >= 40) return { bg: 'var(--amber-glow)', border: 'var(--amber)', text: 'var(--amber)' };
-  return { bg: 'var(--red-glow)', border: 'rgba(248,113,113,0.4)', text: 'var(--red)' };
+// Single neutral palette — relevance shown by bar width, not color
+function citationColor() {
+  return { bg: 'var(--bg-input)', border: 'var(--border)', text: 'var(--text-dim)' };
 }
 
 function ConfidenceBar({ pct }) {
-  const color = citationColor(pct);
   return (
     <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-      <div style={{ flex: 1, height: 3, background: 'var(--bg-input)', borderRadius: 2 }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color.text, borderRadius: 2, transition: 'width 0.4s ease' }} />
+      <div style={{ flex: 1, height: 3, background: 'var(--border)', borderRadius: 2 }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)', opacity: 0.7, borderRadius: 2, transition: 'width 0.4s ease' }} />
       </div>
-      <span style={{ fontSize: 10, color: color.text, fontWeight: 600, minWidth: 28, textAlign: 'right' }}>{pct}%</span>
+      <span style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 500, minWidth: 28, textAlign: 'right' }}>{pct}%</span>
     </div>
   );
 }
 
 function ConfidenceDot({ pct }) {
-  const color = citationColor(pct);
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: color.text, fontWeight: 600, background: color.bg, border: `1px solid ${color.border}`, borderRadius: 20, padding: '1px 6px' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-faint)', fontWeight: 500, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 20, padding: '1px 6px' }}>
       {pct}%
     </span>
   );
@@ -99,7 +124,7 @@ export default function Message({ msg }) {
       <div className="msg-enter" style={s.assistantRow}>
         <div style={s.card}>
           <div className="answer-body">
-            <ReactMarkdown>{msg.answer}</ReactMarkdown>
+            <ReactMarkdown components={mdComponents}>{msg.answer}</ReactMarkdown>
             <span className="streaming-cursor" aria-hidden="true" />
           </div>
         </div>
@@ -133,7 +158,7 @@ export default function Message({ msg }) {
 
         {/* Answer */}
         <div className="answer-body">
-          <ReactMarkdown>{msg.answer}</ReactMarkdown>
+          <ReactMarkdown components={mdComponents}>{msg.answer}</ReactMarkdown>
         </div>
 
         {/* Copy button — hover-revealed via CSS, below the answer */}
@@ -166,7 +191,7 @@ export default function Message({ msg }) {
             <div style={s.divider} />
             <div>
               <p style={s.sectionLabel}>Sources</p>
-              <div className="cit-scroll" style={s.citCards}>
+              <div className="cit-scroll" style={s.citCards} role="region" aria-label="Source citations" tabIndex={0}>
                 {citations.map((c, i) => {
                   const col = citationColor(c.pct);
                   return (
@@ -182,7 +207,9 @@ export default function Message({ msg }) {
                       }}
                       title={`${c.filename} — page ${c.page} · Click to highlight passage`}
                       onClick={() => handleCitationClick(c)}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCitationClick(c); }}
                       role="button"
+                      tabIndex={0}
                       aria-label={`View source passage: ${c.source} page ${c.page}`}
                     >
                       <div style={s.citTop}>

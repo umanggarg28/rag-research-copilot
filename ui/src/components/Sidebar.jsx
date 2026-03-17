@@ -11,10 +11,29 @@ function timeAgo(iso) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+const THEME_ICONS = {
+  auto: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  ),
+  dark: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  ),
+  light: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  ),
+};
+
 export default function Sidebar({
   docs, onDocsChange, sourceFilter, onFilterChange,
   sessions, onLoadSession, onDeleteSession,
   collapsed, onToggleCollapse,
+  theme, onToggleTheme,
 }) {
   const [uploading, setUploading]       = useState(false);
   const [uploadError, setUploadError]   = useState('');
@@ -100,6 +119,11 @@ export default function Sidebar({
           </div>
         )}
 
+        {/* Theme toggle */}
+        <button style={s.collapseBtn} onClick={onToggleTheme} title={`Theme: ${theme}`} aria-label={`Toggle theme (current: ${theme})`}>
+          {THEME_ICONS[theme]}
+        </button>
+
         {/* Expand button */}
         <button style={s.collapseBtn} onClick={onToggleCollapse} title="Expand sidebar" aria-label="Expand sidebar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -124,7 +148,6 @@ export default function Sidebar({
         </div>
         <div style={{ flex: 1 }}>
           <div style={s.brandTitle}>Research Copilot</div>
-          <div style={s.brandSub}>RAG · Grounded answers</div>
         </div>
         <button style={s.collapseExpandBtn} onClick={onToggleCollapse} title="Collapse sidebar" aria-label="Collapse sidebar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -276,6 +299,13 @@ export default function Sidebar({
         </nav>
       )}
 
+      {/* Theme toggle footer */}
+      <div style={s.themeFooter}>
+        <button style={s.themeBtn} onClick={onToggleTheme} aria-label={`Toggle theme (current: ${theme})`} title={`Theme: ${theme}`}>
+          {THEME_ICONS[theme]}
+          <span style={{ textTransform: 'capitalize' }}>{theme === 'auto' ? 'System' : theme}</span>
+        </button>
+      </div>
     </aside>
   );
 }
@@ -399,8 +429,13 @@ const s = {
   },
   sessionTime: { fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 },
 
-  footer: { padding: '10px 16px', borderTop: '1px solid var(--border)', marginTop: 'auto' },
-  footerLink: { fontSize: 12, color: 'var(--text-faint)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 },
+  themeFooter: { padding: '8px 12px', borderTop: '1px solid var(--border)', marginTop: 'auto' },
+  themeBtn: {
+    display: 'flex', alignItems: 'center', gap: 7,
+    background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',
+    color: 'var(--text-faint)', fontSize: 12, cursor: 'pointer', padding: '5px 10px',
+    fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s', width: '100%',
+  },
 
   /* ── Collapsed ── */
   sidebarCollapsed: {

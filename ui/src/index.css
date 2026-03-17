@@ -47,6 +47,14 @@
   --border:      rgba(20, 20, 19, 0.12);
   --border-dim:  rgba(20, 20, 19, 0.07);
 
+  /* Shadows */
+  --shadow-sm:   0 1px 3px rgba(20, 20, 19, 0.07);
+  --shadow-md:   0 4px 16px rgba(20, 20, 19, 0.09);
+  --shadow-lg:   0 8px 32px rgba(20, 20, 19, 0.12);
+
+  /* Input overlay background (adapts to dark mode) */
+  --bg-overlay:  rgba(250, 249, 245, 0.95);
+
   /* Accent — Anthropic terracotta/clay */
   --accent:        #d97757;
   --accent-dim:    #c6613f;
@@ -66,16 +74,54 @@
   --text-dim:    #5e5d59;   /* slate-light */
   --text-faint:  #6b6a63;   /* cloud-dark — AA contrast on ivory  */
 
-  /* Shadows — lighter for warm light theme */
-  --shadow-sm:   0 1px 3px rgba(20, 20, 19, 0.07);
-  --shadow-md:   0 4px 16px rgba(20, 20, 19, 0.09);
-  --shadow-lg:   0 8px 32px rgba(20, 20, 19, 0.12);
-
   /* Radius */
   --r-sm:  6px;
   --r-md:  10px;
   --r-lg:  14px;
   --r-xl:  20px;
+}
+
+/* ── Dark mode ─────────────────────────────────────────────────────────────── */
+:root[data-theme="dark"],
+:root:not([data-theme="light"]):has(body) {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:          #1a1918;
+    --bg-panel:    #201f1d;
+    --bg-surface:  #292724;
+    --bg-input:    #302e2b;
+    --border:      rgba(240, 237, 228, 0.10);
+    --border-dim:  rgba(240, 237, 228, 0.06);
+    --text:        #eeece6;
+    --text-dim:    #a09e97;
+    --text-faint:  #7a7870;
+    --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md:   0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg:   0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg-overlay: rgba(26, 25, 24, 0.95); }
+}
+
+[data-theme="dark"] {
+  --bg-overlay:  rgba(26, 25, 24, 0.95);
+  --bg:          #1a1918;
+  --bg-panel:    #201f1d;
+  --bg-surface:  #292724;
+  --bg-input:    #302e2b;
+  --border:      rgba(240, 237, 228, 0.10);
+  --border-dim:  rgba(240, 237, 228, 0.06);
+  --text:        #eeece6;
+  --text-dim:    #a09e97;
+  --text-faint:  #7a7870;
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md:   0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg:   0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 body {
@@ -114,13 +160,13 @@ body {
 }
 .streaming-cursor {
   display: inline-block;
-  width: 2px;
-  height: 1em;
-  background: var(--accent);
-  margin-left: 2px;
-  vertical-align: text-bottom;
-  border-radius: 1px;
-  animation: blink 0.8s step-end infinite;
+  width: 3px;
+  height: 0.85em;
+  background: var(--text-dim);
+  margin-left: 1px;
+  vertical-align: -0.05em;
+  border-radius: 1.5px;
+  animation: blink 1.0s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Fade-in for messages */

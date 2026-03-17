@@ -195,7 +195,7 @@ const s = {
     padding: '8px 20px 14px',
     borderTop: 'none',
     boxShadow: '0 -1px 0 rgba(20,20,19,0.07), 0 -8px 24px rgba(20,20,19,0.04)',
-    background: 'rgba(250, 249, 245, 0.95)',
+    background: 'var(--bg-overlay)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     position: 'relative',
