@@ -18,7 +18,9 @@ evaluate retrieval and generation INDEPENDENTLY so you can debug which part is f
 """
 
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from pathlib import Path
+import json
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -126,6 +128,54 @@ async def query(
         ],
         model=gen_result["model"],
         tokens_used=gen_result["tokens_used"],
+    )
+
+
+@router.post("/query/stream")
+async def query_stream(
+    request: QueryRequest,
+    retrieval: RetrievalService = Depends(get_retrieval_service),
+    generation: GenerationService = Depends(get_generation_service),
+):
+    """
+    Streaming RAG pipeline via Server-Sent Events.
+
+    Yields:
+      data: {"type": "text",  "content": "<token>"}
+      data: {"type": "done",  "citations": [...], "model": "...", ...}
+      data: {"type": "error", "content": "<msg>"}
+    """
+    if not request.question.strip():
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+
+    results = retrieval.search(
+        query=request.question,
+        top_k=request.top_k,
+        source_filter=request.source_filter,
+        mode=request.mode,
+    )
+
+    if not results:
+        async def no_docs():
+            yield f"data: {json.dumps({'type': 'text', 'content': 'No relevant documents found. Please ingest some research papers first.'})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'citations': [], 'retrieved_chunks': [], 'model': 'none', 'tokens_used': {'input': 0, 'output': 0}})}\n\n"
+        return StreamingResponse(no_docs(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    context = retrieval.format_context(results)
+
+    def event_stream():
+        for event in generation.generate_stream(
+            question=request.question,
+            context=context,
+            retrieved_sources=results,
+        ):
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 

@@ -450,11 +450,11 @@ A vector database stores **vectors** (embeddings). You query it with
 ```
 REGULAR DATABASE:
 ┌────────────────────────────────────────────────────┐
-│ id │ text              │ source    │ page           │
-├────┼───────────────────┼───────────┼────────────────┤
-│  1 │ "attention is..." │ paper_a   │   3            │
-│  2 │ "the model..."    │ paper_a   │   4            │
-│  3 │ "BERT uses..."    │ paper_b   │   1            │
+│ id │ text              │ source    │ page          │
+├────┼───────────────────┼───────────┼───────────────┤
+│  1 │ "attention is..." │ paper_a   │   3           │
+│  2 │ "the model..."    │ paper_a   │   4           │
+│  3 │ "BERT uses..."    │ paper_b   │   1           │
 └────────────────────────────────────────────────────┘
 Query: SELECT * WHERE text LIKE '%attention%'
        (exact keyword match only)

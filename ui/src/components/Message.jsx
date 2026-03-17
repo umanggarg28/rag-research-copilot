@@ -11,7 +11,16 @@ function normalizeCitations(citations) {
   }));
 }
 
-// Color-code citations by confidence tier
+function normalizeChunks(chunks) {
+  if (!chunks?.length) return [];
+  const max = Math.max(...chunks.map(c => c.score));
+  return chunks.map(c => ({
+    ...c,
+    pct: max > 0 ? Math.round((c.score / max) * 100) : 0,
+  }));
+}
+
+// Color-code by confidence tier
 function citationColor(pct) {
   if (pct >= 70) return { bg: 'var(--green-glow)', border: 'var(--green)', text: 'var(--green)' };
   if (pct >= 40) return { bg: 'var(--amber-glow)', border: 'var(--amber)', text: 'var(--amber)' };
@@ -21,7 +30,7 @@ function citationColor(pct) {
 function ConfidenceBar({ pct }) {
   const color = citationColor(pct);
   return (
-    <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
       <div style={{ flex: 1, height: 3, background: 'var(--bg-input)', borderRadius: 2 }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color.text, borderRadius: 2, transition: 'width 0.4s ease' }} />
       </div>
@@ -30,9 +39,25 @@ function ConfidenceBar({ pct }) {
   );
 }
 
+function ConfidenceDot({ pct }) {
+  const color = citationColor(pct);
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: color.text, fontWeight: 600, background: color.bg, border: `1px solid ${color.border}`, borderRadius: 20, padding: '1px 6px' }}>
+      {pct}%
+    </span>
+  );
+}
+
 export default function Message({ msg }) {
   const [showChunks, setShowChunks] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [highlightedKey, setHighlightedKey] = useState(null); // "source::page"
+
+  function handleCitationClick(c) {
+    const key = `${c.source}::${c.page}`;
+    setHighlightedKey(prev => prev === key ? null : key);
+    setShowChunks(true);
+  }
 
   function copyAnswer() {
     navigator.clipboard.writeText(msg.answer || '');
@@ -49,15 +74,28 @@ export default function Message({ msg }) {
     );
   }
 
-  // Loading
+  // Loading: show dots if no text yet, or stream partial text with cursor
   if (msg.loading) {
+    if (!msg.answer) {
+      return (
+        <div className="msg-enter" style={s.assistantRow}>
+          <div style={s.card}>
+            <div style={s.dots}>
+              {[0, 1, 2].map(i => (
+                <span key={i} style={{ ...s.dot, animationDelay: `${i * 0.18}s` }} />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // Streaming in progress
     return (
       <div className="msg-enter" style={s.assistantRow}>
         <div style={s.card}>
-          <div style={s.dots}>
-            {[0, 1, 2].map(i => (
-              <span key={i} style={{ ...s.dot, animationDelay: `${i * 0.18}s` }} />
-            ))}
+          <div className="answer-body">
+            <ReactMarkdown>{msg.answer}</ReactMarkdown>
+            <span className="streaming-cursor" aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -69,13 +107,19 @@ export default function Message({ msg }) {
     return (
       <div className="msg-enter" style={s.assistantRow}>
         <div style={{ ...s.card, borderLeft: '3px solid var(--red)' }}>
-          <p style={{ color: 'var(--red)', fontSize: 13 }}>⚠ {msg.error}</p>
+          <div style={s.errorRow}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{msg.error}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   const citations = normalizeCitations(msg.citations);
+  const chunks = normalizeChunks(msg.retrieved_chunks);
   const totalTokens = (msg.tokens_used?.input ?? 0) + (msg.tokens_used?.output ?? 0);
 
   return (
@@ -83,8 +127,27 @@ export default function Message({ msg }) {
       <div style={s.card}>
 
         {/* Copy button — hover-revealed via CSS */}
-        <button className="copy-btn" style={s.copyBtn} onClick={copyAnswer}>
-          {copied ? '✓ Copied' : 'Copy'}
+        <button
+          className="copy-btn"
+          style={s.copyBtn}
+          onClick={copyAnswer}
+          aria-label="Copy answer to clipboard"
+        >
+          {copied ? (
+            <>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Copied
+            </>
+          ) : (
+            <>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy
+            </>
+          )}
         </button>
 
         {/* Answer */}
@@ -102,9 +165,25 @@ export default function Message({ msg }) {
                 {citations.map((c, i) => {
                   const col = citationColor(c.pct);
                   return (
-                    <div key={i} style={{ ...s.citCard, background: col.bg, border: `1px solid ${col.border}` }}>
+                    <div
+                      key={i}
+                      style={{
+                        ...s.citCard,
+                        background: col.bg,
+                        border: `1px solid ${col.border}`,
+                        cursor: 'pointer',
+                        outline: highlightedKey === `${c.source}::${c.page}` ? `2px solid ${col.border}` : 'none',
+                        outlineOffset: 2,
+                      }}
+                      title={`${c.filename} — page ${c.page} · Click to highlight passage`}
+                      onClick={() => handleCitationClick(c)}
+                      role="button"
+                      aria-label={`View source passage: ${c.source} page ${c.page}`}
+                    >
                       <div style={s.citTop}>
-                        <span style={s.citIcon}>📄</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={col.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                        </svg>
                         <span style={s.citName}>{c.source}</span>
                         <span style={{ ...s.citPage, color: col.text }}>p.{c.page}</span>
                       </div>
@@ -118,23 +197,37 @@ export default function Message({ msg }) {
         )}
 
         {/* Retrieved chunks toggle */}
-        {msg.retrieved_chunks?.length > 0 && (
+        {chunks.length > 0 && (
           <>
             <div style={s.divider} />
-            <button style={s.toggleBtn} onClick={() => setShowChunks(v => !v)}>
-              {showChunks ? '▲' : '▶'} {showChunks ? 'Hide' : 'Show'} {msg.retrieved_chunks.length} retrieved passages
+            <button
+              style={s.toggleBtn}
+              onClick={() => setShowChunks(v => !v)}
+              aria-expanded={showChunks}
+              aria-label={`${showChunks ? 'Hide' : 'Show'} source passages`}
+            >
+              <svg
+                style={{ transition: 'transform 0.15s', transform: showChunks ? 'rotate(90deg)' : 'rotate(0deg)', flexShrink: 0 }}
+                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+              View source passages ({chunks.length})
             </button>
             {showChunks && (
               <div style={s.chunksList}>
-                {msg.retrieved_chunks.map((c, i) => (
-                  <div key={i} style={s.chunk}>
-                    <div style={s.chunkMeta}>
-                      {c.source} · page {c.page}
-                      <span style={s.chunkScore}>score {c.score.toFixed(4)}</span>
+                {chunks.map((c, i) => {
+                  const isHighlighted = highlightedKey === `${c.source}::${c.page}`;
+                  return (
+                    <div key={i} style={{ ...s.chunk, ...(isHighlighted ? s.chunkHighlighted : {}) }}>
+                      <div style={s.chunkMeta}>
+                        <span>{c.source} · page {c.page}</span>
+                        <ConfidenceDot pct={c.pct} />
+                      </div>
+                      <p style={s.chunkText}>{c.text}</p>
                     </div>
-                    <p style={s.chunkText}>{c.text}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
@@ -145,10 +238,11 @@ export default function Message({ msg }) {
           <>
             <div style={s.divider} />
             <div style={s.footer}>
-              <span>{msg.model}</span>
-              <span>·</span>
+              <span style={s.footerModel}>{msg.model}</span>
+              <span style={s.footerDot}>·</span>
               <span>{totalTokens.toLocaleString()} tokens</span>
-              {msg.elapsed && <><span>·</span><span>{msg.elapsed}s</span></>}
+              {msg.elapsed && <><span style={s.footerDot}>·</span><span>{msg.elapsed}s</span></>}
+              {msg.timestamp && <><span style={s.footerDot}>·</span><span>{msg.timestamp}</span></>}
             </div>
           </>
         )}
@@ -159,7 +253,7 @@ export default function Message({ msg }) {
 }
 
 const s = {
-  userRow: { display: 'flex', justifyContent: 'flex-end', marginBottom: 8 },
+  userRow: { display: 'flex', justifyContent: 'flex-end', marginBottom: 12 },
   userBubble: {
     maxWidth: '70%',
     background: 'linear-gradient(135deg, var(--accent-dim), #5570d4)',
@@ -172,9 +266,9 @@ const s = {
     fontWeight: 450,
   },
 
-  assistantRow: { display: 'flex', justifyContent: 'flex-start', marginBottom: 8 },
+  assistantRow: { display: 'flex', justifyContent: 'flex-start', marginBottom: 12 },
   card: {
-    maxWidth: '88%',
+    width: '100%',
     background: 'var(--bg-panel)',
     border: '1px solid var(--border)',
     borderLeft: '3px solid var(--accent)',
@@ -186,6 +280,8 @@ const s = {
     boxShadow: 'var(--shadow-md)',
     position: 'relative',
   },
+
+  errorRow: { display: 'flex', alignItems: 'center', gap: 8 },
 
   copyBtn: {
     position: 'absolute',
@@ -200,6 +296,10 @@ const s = {
     cursor: 'pointer',
     fontWeight: 500,
     zIndex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+    fontFamily: 'inherit',
   },
 
   dots: { display: 'flex', gap: 5, padding: '4px 2px', alignItems: 'center' },
@@ -222,7 +322,7 @@ const s = {
     fontWeight: 700,
     color: 'var(--text-faint)',
     letterSpacing: '0.1em',
-    marginBottom: 8,
+    marginBottom: 10,
   },
 
   citCards: { display: 'flex', flexWrap: 'wrap', gap: 8 },
@@ -234,7 +334,6 @@ const s = {
     padding: '10px 12px',
   },
   citTop: { display: 'flex', alignItems: 'center', gap: 6 },
-  citIcon: { fontSize: 14, flexShrink: 0 },
   citName: {
     flex: 1,
     fontSize: 12,
@@ -255,6 +354,10 @@ const s = {
     padding: '2px 0',
     textAlign: 'left',
     fontFamily: 'inherit',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    transition: 'color 0.15s',
   },
   chunksList: { marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 },
   chunk: {
@@ -266,12 +369,17 @@ const s = {
   chunkMeta: {
     fontSize: 11,
     color: 'var(--accent)',
-    marginBottom: 5,
+    marginBottom: 6,
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  chunkScore: { color: 'var(--text-faint)' },
   chunkText: { fontSize: 12.5, color: 'var(--text-dim)', lineHeight: 1.65 },
+  chunkHighlighted: {
+    borderLeft: '3px solid var(--accent)',
+    background: 'var(--accent-glow)',
+    borderColor: 'var(--accent-border)',
+  },
 
   footer: {
     display: 'flex',
@@ -279,5 +387,8 @@ const s = {
     fontSize: 11,
     color: 'var(--text-faint)',
     flexWrap: 'wrap',
+    alignItems: 'center',
   },
+  footerModel: { color: 'var(--text-dim)', fontWeight: 500 },
+  footerDot: { opacity: 0.4 },
 };

@@ -1,6 +1,4 @@
 // api.js — all HTTP calls to the FastAPI backend in one place.
-// Centralising this means if the backend URL changes (e.g. for deployment),
-// you change it in one place only.
 
 const BASE = 'http://localhost:8000';
 
@@ -28,17 +26,46 @@ export async function deleteDocument(source) {
   return res.json();
 }
 
-export async function queryRAG(question, topK = 5, sourceFilter = null, mode = 'hybrid') {
+/**
+ * Streaming RAG query via Server-Sent Events.
+ * Calls onToken for each streamed text token, onDone with final metadata.
+ */
+export async function queryRAGStream(question, topK = 5, sourceFilter = null, mode = 'hybrid', onToken, onDone) {
   const body = { question, top_k: topK, mode };
   if (sourceFilter) body.source_filter = sourceFilter;
-  const res = await fetch(`${BASE}/query`, {
+
+  const res = await fetch(`${BASE}/query/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || 'Query failed');
   }
-  return res.json();
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop() ?? '';
+
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith('data: ')) continue;
+      let data;
+      try { data = JSON.parse(line.slice(6)); } catch { continue; }
+
+      if (data.type === 'text') onToken(data.content);
+      else if (data.type === 'done') onDone(data);
+      else if (data.type === 'error') throw new Error(data.content);
+    }
+  }
 }

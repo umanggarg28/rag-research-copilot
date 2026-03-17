@@ -73,6 +73,85 @@ class GenerationService:
             "Get a free Groq key at: https://console.groq.com"
         )
 
+    def generate_stream(self, question: str, context: str, retrieved_sources: list[dict]):
+        """
+        Generator that streams text tokens then yields a final 'done' event.
+
+        Yields dicts:
+          {"type": "text",  "content": "<token>"}   — one per streamed token
+          {"type": "done",  "citations": [...], ...} — final metadata event
+          {"type": "error", "content": "<msg>"}      — on failure
+        """
+        user_message = (
+            f"Context from research papers:\n\n{context}\n\n---\n\nQuestion: {question}"
+        )
+        citations = self._build_citations(retrieved_sources)
+        retrieved_chunks = [
+            {"text": r["text"], "source": r["source"],
+             "filename": r["filename"], "page": r["page"], "score": r["score"]}
+            for r in retrieved_sources
+        ]
+
+        if self.provider == "groq":
+            yield from self._stream_groq(user_message, citations, retrieved_chunks)
+        else:
+            yield from self._stream_anthropic(user_message, citations, retrieved_chunks)
+
+    def _stream_groq(self, user_message, citations, retrieved_chunks):
+        input_tokens = output_tokens = 0
+        try:
+            stream = self.client.chat.completions.create(
+                model=self.model,
+                max_tokens=1024,
+                stream=True,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": user_message},
+                ],
+            )
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content if chunk.choices else None
+                if delta:
+                    yield {"type": "text", "content": delta}
+                if getattr(chunk, "usage", None):
+                    input_tokens  = chunk.usage.prompt_tokens     or 0
+                    output_tokens = chunk.usage.completion_tokens or 0
+        except Exception as e:
+            yield {"type": "error", "content": str(e)}
+            return
+        yield {
+            "type": "done",
+            "citations": citations,
+            "model": f"groq/{self.model}",
+            "tokens_used": {"input": input_tokens, "output": output_tokens},
+            "retrieved_chunks": retrieved_chunks,
+        }
+
+    def _stream_anthropic(self, user_message, citations, retrieved_chunks):
+        input_tokens = output_tokens = 0
+        try:
+            with self.client.messages.stream(
+                model=self.model,
+                max_tokens=1024,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_message}],
+            ) as stream:
+                for text in stream.text_stream:
+                    yield {"type": "text", "content": text}
+                final = stream.get_final_message()
+                input_tokens  = final.usage.input_tokens
+                output_tokens = final.usage.output_tokens
+        except Exception as e:
+            yield {"type": "error", "content": str(e)}
+            return
+        yield {
+            "type": "done",
+            "citations": citations,
+            "model": f"anthropic/{self.model}",
+            "tokens_used": {"input": input_tokens, "output": output_tokens},
+            "retrieved_chunks": retrieved_chunks,
+        }
+
     def generate(self, question: str, context: str, retrieved_sources: list[dict]) -> dict:
         """
         Generate a grounded answer from retrieved context.
