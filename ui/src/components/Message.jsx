@@ -24,6 +24,8 @@ function CodeBlock({ className, children }) {
 }
 
 const mdComponents = {
+  // Strip the outer <pre> react-markdown adds — CodeBlock provides its own
+  pre({ children }) { return <>{children}</>; },
   code({ node, inline, className, children, ...props }) {
     if (inline) return <code style={{ background: 'var(--bg-surface)', padding: '2px 6px', borderRadius: 'var(--r-sm)', fontSize: 13, fontFamily: '"Anthropic Mono", monospace', color: 'var(--accent)', border: '1px solid var(--border)' }} {...props}>{children}</code>;
     return <CodeBlock className={className}>{children}</CodeBlock>;
