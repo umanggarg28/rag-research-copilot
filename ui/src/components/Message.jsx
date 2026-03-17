@@ -165,7 +165,7 @@ export default function Message({ msg }) {
           <>
             <div style={s.divider} />
             <div>
-              <p style={s.sectionLabel}>SOURCES</p>
+              <p style={s.sectionLabel}>Sources</p>
               <div className="cit-scroll" style={s.citCards}>
                 {citations.map((c, i) => {
                   const col = citationColor(c.pct);
@@ -262,14 +262,15 @@ const s = {
   userRow: { display: 'flex', justifyContent: 'flex-end', marginBottom: 4, marginTop: 8 },
   userBubble: {
     maxWidth: '70%',
-    background: 'linear-gradient(135deg, var(--accent-dim), #5570d4)',
-    color: '#fff',
+    background: 'var(--bg-surface)',
+    color: 'var(--text)',
+    border: '1px solid var(--border)',
     padding: '10px 16px',
     borderRadius: '14px 14px 4px 14px',
     fontSize: 14,
     lineHeight: 1.65,
     boxShadow: 'var(--shadow-sm)',
-    fontWeight: 450,
+    fontWeight: 400,
   },
 
   assistantRow: { display: 'flex', justifyContent: 'flex-start', marginBottom: 24 },
@@ -277,7 +278,7 @@ const s = {
     width: '100%',
     background: 'var(--bg-panel)',
     border: '1px solid var(--border)',
-    borderTop: '1px solid rgba(108,143,255,0.15)',
+    borderTop: '1px solid rgba(198,97,63,0.15)',
     padding: '16px 18px',
     borderRadius: 'var(--r-lg)',
     display: 'flex',
@@ -320,14 +321,13 @@ const s = {
 
   divider: {
     height: 1,
-    background: 'rgba(255,255,255,0.05)',
+    background: 'var(--border)',
     margin: '12px 0',
   },
   sectionLabel: {
-    fontSize: 10,
-    fontWeight: 700,
+    fontSize: 11,
+    fontWeight: 500,
     color: 'var(--text-faint)',
-    letterSpacing: '0.1em',
     marginBottom: 10,
   },
 

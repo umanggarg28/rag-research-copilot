@@ -25,10 +25,10 @@ export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
           <div style={s.examplesLabel}>Try asking</div>
           <div style={s.examples}>
             {[
-              { q: 'How does multi-head attention work?',        icon: '🧠' },
-              { q: 'What BLEU score was achieved on WMT 2014?',  icon: '📊' },
-              { q: 'What optimizer and learning rate was used?', icon: '⚙️' },
-            ].map(({ q, icon }) => (
+              'How does multi-head attention work?',
+              'What BLEU score was achieved on WMT 2014?',
+              'What optimizer and learning rate was used?',
+            ].map(q => (
               <button
                 key={q}
                 className="ex-chip"
@@ -36,7 +36,6 @@ export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
                 onClick={() => onChipClick(q)}
                 aria-label={`Ask: ${q}`}
               >
-                <span style={s.exIcon}>{icon}</span>
                 <span style={s.exText}>{q}</span>
                 <svg style={s.exArrow} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -100,7 +99,7 @@ const s = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
-    background: 'radial-gradient(ellipse at 50% 40%, rgba(108,143,255,0.04) 0%, transparent 65%)',
+    background: 'radial-gradient(ellipse at 50% 40%, rgba(198,97,63,0.05) 0%, transparent 65%)',
   },
   emptyCard: {
     maxWidth: 520,
@@ -116,35 +115,31 @@ const s = {
     width: 320,
     height: 320,
     borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(108,143,255,0.08) 0%, transparent 70%)',
+    background: 'radial-gradient(circle, rgba(198,97,63,0.06) 0%, transparent 70%)',
     pointerEvents: 'none',
   },
   orbWrap: {
-    width: 64,
-    height: 64,
-    margin: '0 auto 24px',
+    width: 72,
+    height: 72,
+    margin: '0 auto 28px',
     position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   orbOuter: {
     position: 'absolute',
     inset: 0,
     borderRadius: '50%',
-    background: 'conic-gradient(from 180deg, #6c8fff 0deg, #a78bfa 120deg, #60a5fa 240deg, #6c8fff 360deg)',
-    animation: 'orbSpin 8s linear infinite',
-    filter: 'blur(1px)',
-    opacity: 0.85,
+    /* Clear 90-degree arc — visibly spinning */
+    background: 'conic-gradient(from 0deg, #c6613f 0deg, #d97757 90deg, transparent 90deg)',
+    animation: 'orbSpin 1.8s linear infinite',
   },
   orbInner: {
     position: 'absolute',
-    inset: 8,
+    inset: 10,
     borderRadius: '50%',
     background: 'var(--bg)',
     zIndex: 1,
   },
-  emptyTitle: { fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 10 },
+  emptyTitle: { fontSize: 26, fontWeight: 500, color: 'var(--text)', marginBottom: 10, fontFamily: '"Anthropic Serif", Georgia, serif' },
   emptyDesc: { fontSize: 14, color: 'var(--text-dim)', lineHeight: 1.7, marginBottom: 32 },
   examplesLabel: {
     fontSize: 11,

@@ -174,7 +174,7 @@ export default function Sidebar({
       {/* Documents */}
       <nav style={s.docsSection} aria-label="Ingested documents">
         <div style={s.sectionHeader}>
-          <span style={s.sectionLabel}>DOCUMENTS</span>
+          <span style={s.sectionLabel}>Documents</span>
           <span style={s.sectionCount}>{docs.length}</span>
           {sourceFilter && (
             <span style={s.filterPill}>
@@ -242,7 +242,7 @@ export default function Sidebar({
       {sessions.length > 0 && (
         <nav style={s.sessionsSection} aria-label="Recent chats">
           <div style={s.sectionHeader}>
-            <span style={s.sectionLabel}>RECENT CHATS</span>
+            <span style={s.sectionLabel}>Recent chats</span>
             <span style={s.sectionCount}>{sessions.length}</span>
           </div>
           <div style={s.sessionList}>
@@ -281,16 +281,6 @@ export default function Sidebar({
         </nav>
       )}
 
-      {/* Footer */}
-      <div style={s.footer}>
-        <a href="http://localhost:8000/docs" target="_blank" rel="noreferrer" style={s.footerLink}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-          </svg>
-          API Docs
-        </a>
-      </div>
     </aside>
   );
 }
@@ -301,7 +291,6 @@ const s = {
     width: 264, minWidth: 264,
     background: 'var(--bg-panel)',
     borderRight: '1px solid var(--border)',
-    boxShadow: '2px 0 20px rgba(0,0,0,0.35)',
     display: 'flex', flexDirection: 'column',
     height: '100vh',
     transition: 'width 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -310,7 +299,7 @@ const s = {
   brand: {
     display: 'flex', alignItems: 'center', gap: 10,
     padding: '16px 12px 16px 16px',
-    background: 'linear-gradient(135deg, var(--bg-panel) 0%, #1a1f3a 100%)',
+    background: 'var(--bg-panel)',
     borderBottom: '1px solid var(--border)',
   },
   brandLogo: {
@@ -318,7 +307,7 @@ const s = {
     background: 'var(--accent-glow)', border: '1px solid var(--accent-border)',
     borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
-  brandTitle: { fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: '0.02em' },
+  brandTitle: { fontSize: 14, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' },
   brandSub:   { fontSize: 11, color: 'var(--text-faint)', marginTop: 1 },
   collapseExpandBtn: {
     background: 'none', border: '1px solid var(--border-dim)', borderRadius: 'var(--r-sm)',
@@ -329,10 +318,10 @@ const s = {
   uploadZone: { padding: '12px 12px 8px' },
   uploadBtn: {
     width: '100%', padding: '9px 0',
-    background: 'linear-gradient(135deg, var(--accent-dim) 0%, #5570d4 100%)',
+    background: 'var(--accent)',
     color: '#fff', border: 'none', borderRadius: 'var(--r-md)',
     fontSize: 13, fontWeight: 600, cursor: 'pointer',
-    boxShadow: '0 2px 12px rgba(108,143,255,0.25)', transition: 'all 0.15s',
+    boxShadow: '0 2px 8px rgba(217,119,87,0.25)', transition: 'all 0.15s',
     display: 'block', textAlign: 'center',
   },
   uploadBtnDrag: {
@@ -351,7 +340,7 @@ const s = {
 
   docsSection: { display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '4px 0' },
   sectionHeader: { display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px' },
-  sectionLabel:  { fontSize: 11, fontWeight: 600, color: 'var(--text-faint)', letterSpacing: '0.08em' },
+  sectionLabel:  { fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' },
   sectionCount:  {
     fontSize: 11, background: 'var(--bg-input)', color: 'var(--text-dim)',
     borderRadius: 20, padding: '0 6px', fontWeight: 600,
@@ -389,7 +378,7 @@ const s = {
     borderRadius: 'var(--r-sm)', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: '2px 8px', fontFamily: 'inherit',
   },
   confirmNo: {
-    background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-dim)',
+    background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-dim)',
     borderRadius: 'var(--r-sm)', fontSize: 11, cursor: 'pointer', padding: '2px 8px', fontFamily: 'inherit',
   },
   emptyDocs: { textAlign: 'center', padding: '20px 16px' },
@@ -423,7 +412,6 @@ const s = {
   sidebarCollapsed: {
     width: 52, minWidth: 52,
     background: 'var(--bg-panel)', borderRight: '1px solid var(--border)',
-    boxShadow: '2px 0 20px rgba(0,0,0,0.35)',
     display: 'flex', flexDirection: 'column', alignItems: 'center',
     height: '100vh', paddingTop: 10, gap: 4,
     transition: 'width 0.22s cubic-bezier(0.4, 0, 0.2, 1)',

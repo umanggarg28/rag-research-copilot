@@ -1,41 +1,75 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
+@font-face {
+  font-family: "Anthropic Sans";
+  src: url(https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/69971a00a3295036497e1a28_AnthropicSans-Roman-Web.woff2) format("woff2");
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Sans";
+  src: url(https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/69971a016067bf14b9b8f48d_AnthropicSans-Italic-Web.woff2) format("woff2");
+  font-weight: 300 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Serif";
+  src: url(https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/69971a1551eb6cda0d656e8a_AnthropicSerif-Roman-Web.woff2) format("woff2");
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Serif";
+  src: url(https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/69971a15a9fb8c1107a3570e_AnthropicSerif-Italic-Web.woff2) format("woff2");
+  font-weight: 300 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Mono";
+  src: url(https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/69971a2e55d24d61bc045b1a_AnthropicMono-Roman-Web.woff2) format("woff2");
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Surfaces — 3 levels of depth */
-  --bg:          #0a0c14;
-  --bg-panel:    #13162b;
-  --bg-surface:  #1c2038;
-  --bg-input:    #252a42;
+  /* Anthropic color system — exact swatches */
+  --bg:          #faf9f5;   /* ivory-light  */
+  --bg-panel:    #f0eee6;   /* ivory-medium */
+  --bg-surface:  #e8e6dc;   /* ivory-dark   */
+  --bg-input:    #e3dacc;   /* oat          */
 
   /* Borders */
-  --border:      #2a2f50;
-  --border-dim:  #1e2240;
+  --border:      rgba(20, 20, 19, 0.12);
+  --border-dim:  rgba(20, 20, 19, 0.07);
 
-  /* Accent */
-  --accent:      #6c8fff;
-  --accent-dim:  #3d4f99;
-  --accent-glow: rgba(108,143,255,0.12);
-  --accent-border: rgba(108,143,255,0.35);
+  /* Accent — Anthropic terracotta/clay */
+  --accent:        #d97757;
+  --accent-dim:    #c6613f;
+  --accent-glow:   rgba(217, 119, 87, 0.10);
+  --accent-border: rgba(217, 119, 87, 0.30);
 
-  /* Semantic */
-  --green:       #4ade80;
-  --green-glow:  rgba(74,222,128,0.1);
-  --amber:       #fbbf24;
-  --amber-glow:  rgba(251,191,36,0.1);
-  --red:         #f87171;
-  --red-glow:    rgba(248,113,113,0.1);
+  /* Semantic — darkened for legibility on cream */
+  --green:       #16a34a;
+  --green-glow:  rgba(22, 163, 74, 0.08);
+  --amber:       #b45309;
+  --amber-glow:  rgba(180, 83, 9, 0.08);
+  --red:         #dc2626;
+  --red-glow:    rgba(220, 38, 38, 0.07);
 
-  /* Text */
-  --text:        #e2e8f0;
-  --text-dim:    #8892b0;
-  --text-faint:  #6874a8;
+  /* Text — Anthropic slate scale */
+  --text:        #141413;   /* slate-dark  */
+  --text-dim:    #5e5d59;   /* slate-light */
+  --text-faint:  #6b6a63;   /* cloud-dark — AA contrast on ivory  */
 
-  /* Shadows */
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md:   0 4px 16px rgba(0,0,0,0.5);
-  --shadow-lg:   0 8px 32px rgba(0,0,0,0.6);
+  /* Shadows — lighter for warm light theme */
+  --shadow-sm:   0 1px 3px rgba(20, 20, 19, 0.07);
+  --shadow-md:   0 4px 16px rgba(20, 20, 19, 0.09);
+  --shadow-lg:   0 8px 32px rgba(20, 20, 19, 0.12);
 
   /* Radius */
   --r-sm:  6px;
@@ -45,14 +79,13 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-family: "Anthropic Sans", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   height: 100vh;
   overflow: hidden;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -61,7 +94,7 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(20,20,19,0.18); border-radius: 3px; }
 
 /* Upload spinner */
 @keyframes spin {
@@ -70,7 +103,7 @@ body {
 
 /* Loading dots */
 @keyframes bounce {
-  0%, 80%, 100% { transform: translateY(0);   opacity: 0.4; }
+  0%, 80%, 100% { transform: translateY(0);   opacity: 0.35; }
   40%           { transform: translateY(-5px); opacity: 1; }
 }
 
@@ -97,43 +130,42 @@ body {
 }
 .msg-enter { animation: fadeUp 0.2s ease forwards; }
 
-/* Animated orb for empty state */
+/* Orb arc spin */
 @keyframes orbSpin {
   to { transform: rotate(360deg); }
 }
-@keyframes orbPulse {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.06); }
-}
 
 /* Markdown in answers */
-.answer-body { font-size: 15.5px; line-height: 1.82; color: var(--text); letter-spacing: -0.01em; }
+.answer-body { font-size: 15px; line-height: 1.75; color: var(--text); letter-spacing: -0.01em; }
 .answer-body p  { margin-bottom: 14px; }
 .answer-body p:last-child { margin-bottom: 0; }
 .answer-body ul, .answer-body ol { margin: 10px 0 14px 22px; }
 .answer-body li { margin-bottom: 5px; }
-.answer-body strong { color: #fff; font-weight: 600; }
+.answer-body strong { color: var(--text); font-weight: 600; }
+.answer-body em { font-style: italic; }
 .answer-body code {
-  background: var(--bg-input);
+  background: var(--bg-surface);
   padding: 2px 6px;
   border-radius: var(--r-sm);
   font-size: 13px;
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: "Anthropic Mono", "JetBrains Mono", monospace;
   color: var(--accent);
+  border: 1px solid var(--border);
 }
 .answer-body pre {
-  background: var(--bg-input);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   padding: 14px;
   border-radius: var(--r-md);
   overflow-x: auto;
   margin: 10px 0;
 }
-.answer-body pre code { background: none; padding: 0; color: var(--text); }
+.answer-body pre code { background: none; padding: 0; color: var(--text-dim); border: none; }
 .answer-body h1, .answer-body h2, .answer-body h3 {
-  color: #fff;
+  color: var(--text);
   margin: 14px 0 6px;
   font-weight: 600;
+  font-family: "Anthropic Serif", Georgia, serif;
 }
 
 /* Hover-reveal copy button */
@@ -156,21 +188,28 @@ button.ex-chip:hover {
   background: var(--bg-surface) !important;
   border-color: var(--accent) !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 16px rgba(20,20,19,0.1);
 }
 button.ex-chip:active {
   transform: translateY(0);
 }
 
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
 /* Send button hover/active */
 .send-btn:hover:not(:disabled) {
-  background: #7c9bff !important;
-  transform: scale(1.06);
-  box-shadow: 0 4px 16px rgba(108,143,255,0.5) !important;
+  background: var(--accent-dim) !important;
+  transform: scale(1.03);
+  box-shadow: 0 4px 16px rgba(198,97,63,0.45) !important;
 }
 .send-btn:active:not(:disabled) {
   transform: scale(0.95);
-  box-shadow: 0 1px 4px rgba(108,143,255,0.2) !important;
+  box-shadow: 0 1px 4px rgba(198,97,63,0.2) !important;
 }
 
 /* Citation card hover lift */
@@ -180,7 +219,7 @@ button.ex-chip:active {
 }
 .cit-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+  box-shadow: 0 6px 20px rgba(20,20,19,0.12) !important;
 }
 .cit-card:active {
   transform: translateY(0);
@@ -195,7 +234,7 @@ button.ex-chip:active {
 
 /* Sidebar upload button hover */
 label[aria-label="Upload a PDF file"]:not([style*="not-allowed"]):hover {
-  filter: brightness(1.1);
+  filter: brightness(0.97);
 }
 
 /* Settings / clear button hover */
@@ -206,14 +245,13 @@ button:hover[title="Start a new chat"] {
 }
 
 /* Session item hover */
-button[style*="sessionItem"]:hover,
 nav[aria-label="Recent chats"] button:hover {
   background: var(--bg-surface) !important;
 }
 
 /* Collapsed sidebar button hover */
-aside[aria-label="Sidebar (collapsed)"] label:hover,
-aside[aria-label="Sidebar (collapsed)"] button:hover {
+aside[data-collapsed="true"] label:hover,
+aside[data-collapsed="true"] button:hover {
   border-color: var(--accent-border) !important;
   color: var(--accent) !important;
 }

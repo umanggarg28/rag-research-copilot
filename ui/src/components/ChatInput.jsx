@@ -194,7 +194,7 @@ const s = {
   wrapper: {
     padding: '8px 20px 14px',
     borderTop: '1px solid var(--border)',
-    background: 'rgba(10, 12, 20, 0.85)',
+    background: 'rgba(250, 249, 245, 0.92)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     position: 'relative',
@@ -224,10 +224,9 @@ const s = {
     transition: 'all 0.15s',
   },
   modeBtnActive: {
-    background: 'var(--accent-dim)',
-    border: '1px solid var(--accent-border)',
-    color: '#fff',
-    boxShadow: '0 0 0 1px rgba(108,143,255,0.2)',
+    background: 'var(--bg)',
+    border: '1.5px solid var(--accent)',
+    color: 'var(--accent)',
   },
 
   settingsBtn: {
@@ -313,7 +312,7 @@ const s = {
     justifyContent: 'center',
     flexShrink: 0,
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(108,143,255,0.3)',
+    boxShadow: '0 2px 8px rgba(217,119,87,0.25)',
   },
 
   hintRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 },
