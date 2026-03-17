@@ -340,7 +340,7 @@ const s = {
     display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'border-color 0.15s, color 0.15s',
   },
 
-  uploadZone: { padding: '12px 12px 8px' },
+  uploadZone: { padding: '12px 12px 12px' },
   uploadBtn: {
     width: '100%', padding: '9px 0',
     background: 'var(--accent)',
@@ -358,10 +358,10 @@ const s = {
   spinner: {
     display: 'inline-block', width: 12, height: 12,
     border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff',
-    borderRadius: '50%', animation: 'spin 0.7s linear infinite',
+    borderRadius: '50%', animation: 'spin 0.55s linear infinite',
   },
-  uploadHint: { fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', marginTop: 5 },
-  error:      { color: 'var(--red)', fontSize: 12, marginTop: 5, textAlign: 'center' },
+  uploadHint: { fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', marginTop: 8 },
+  error:      { color: 'var(--red)', fontSize: 12, marginTop: 8, textAlign: 'center' },
 
   docsSection: { display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '4px 0' },
   sectionHeader: { display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px' },

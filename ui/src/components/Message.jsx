@@ -322,7 +322,7 @@ const s = {
     borderRadius: 'var(--r-sm)',
     padding: '3px 10px',
     fontSize: 11,
-    color: 'var(--text-dim)',
+    color: 'var(--text-faint)',
     cursor: 'pointer',
     fontWeight: 500,
     display: 'inline-flex',
@@ -330,6 +330,7 @@ const s = {
     gap: 5,
     fontFamily: 'inherit',
     alignSelf: 'flex-start',
+    transition: 'color 0.12s, border-color 0.12s',
   },
 
   dots: { display: 'flex', gap: 5, padding: '4px 2px', alignItems: 'center' },
@@ -339,7 +340,7 @@ const s = {
     height: 7,
     borderRadius: '50%',
     background: 'var(--text-dim)',
-    animation: 'bounce 1.2s ease-in-out infinite',
+    animation: 'bounce 0.85s ease-in-out infinite',
   },
 
   divider: {

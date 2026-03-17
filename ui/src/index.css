@@ -192,11 +192,11 @@ body {
 .msg-enter { animation: fadeUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 /* Markdown in answers */
-.answer-body { font-size: 15px; line-height: 1.75; color: var(--text); letter-spacing: -0.01em; }
-.answer-body p  { margin-bottom: 14px; }
+.answer-body { font-size: 15px; line-height: 1.78; color: var(--text); letter-spacing: -0.01em; }
+.answer-body p  { margin-bottom: 12px; }
 .answer-body p:last-child { margin-bottom: 0; }
-.answer-body ul, .answer-body ol { margin: 10px 0 14px 22px; }
-.answer-body li { margin-bottom: 5px; }
+.answer-body ul, .answer-body ol { margin: 8px 0 12px 20px; }
+.answer-body li { margin-bottom: 4px; line-height: 1.65; }
 .answer-body strong { color: var(--text); font-weight: 600; }
 .answer-body em { font-style: italic; }
 /* Inline code — block code is handled by CodeBlock component */
@@ -311,6 +311,48 @@ aside[data-collapsed="true"] button:hover {
 /* Doc item confirm delete */
 .doc-item .confirm-row { display: none; }
 .doc-item:hover .confirm-row { display: flex; }
+
+/* Range slider — custom track and thumb */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-input);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-overlay);
+  box-shadow: 0 1px 4px rgba(217,119,87,0.3);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(217,119,87,0.45);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-overlay);
+  box-shadow: 0 1px 4px rgba(217,119,87,0.3);
+}
+
+/* Copy button hover */
+.msg-card .copy-btn:hover {
+  color: var(--accent) !important;
+  border-color: var(--accent-border) !important;
+}
 
 /* Horizontal citation scroll — hide scrollbar */
 .cit-scroll::-webkit-scrollbar { display: none; }

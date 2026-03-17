@@ -92,7 +92,7 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
               <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
             </svg>
-            <svg style={{ marginLeft: 2, transition: 'transform 0.15s', transform: showSettings ? 'rotate(180deg)' : 'rotate(0deg)' }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg style={{ marginLeft: 2, transition: 'transform 0.12s cubic-bezier(0.4,0,0.2,1)', transform: showSettings ? 'rotate(180deg)' : 'rotate(0deg)' }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="m6 9 6 6 6-6"/>
             </svg>
           </button>
@@ -163,7 +163,7 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
           title="Send (Enter)"
         >
           {disabled ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 0.6s linear infinite' }}>
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
           ) : (
