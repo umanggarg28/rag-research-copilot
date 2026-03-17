@@ -20,6 +20,11 @@ Read it alongside the code. Run `python demo_concepts.py` to see the outputs liv
 8. [The API Layer — FastAPI](#8-the-api-layer)
 9. [How Every File Fits Together](#9-how-every-file-fits-together)
 10. [End-to-End Walkthrough](#10-end-to-end-walkthrough)
+11. [The Frontend — React UI](#11-the-frontend)
+    - 11a. Streaming with Server-Sent Events
+    - 11b. Component Architecture
+    - 11c. Session Persistence
+    - 11d. Relevance Filtering
 
 ---
 
@@ -463,9 +468,9 @@ VECTOR DATABASE (ChromaDB):
 ┌────────────────────────────────────────────────────────────────┐
 │ id │ vector (384 dims)          │ document       │ metadata    │
 ├────┼────────────────────────────┼────────────────┼─────────────┤
-│  1 │ [-0.03, 0.02, 0.04, ...]  │ "attention..." │ source:a p:3│
-│  2 │ [-0.01, 0.03, 0.02, ...]  │ "the model..." │ source:a p:4│
-│  3 │ [ 0.12,-0.08, 0.11, ...]  │ "BERT uses..." │ source:b p:1│
+│  1 │ [-0.03, 0.02, 0.04, ...]   │ "attention..." │ source:a p:3│
+│  2 │ [-0.01, 0.03, 0.02, ...]   │ "the model..." │ source:a p:4│
+│  3 │ [ 0.12,-0.08, 0.11, ...]   │ "BERT uses..." │ source:b p:1│
 └────────────────────────────────────────────────────────────────┘
 Query: find 5 rows whose vectors are closest to query_vector
        (semantic similarity — no exact keyword match needed)
@@ -1124,6 +1129,265 @@ generation.py:
   "tokens_used": {"input": 1843, "output": 87}
 }
 ```
+
+---
+
+# 11. The Frontend
+
+The backend is a FastAPI server that exposes a clean REST + SSE API.
+The frontend is a React single-page application in `ui/src/` that consumes it.
+
+```
+ui/src/
+  App.jsx              — root state, session management, send logic
+  api.js               — all fetch calls to the backend
+  components/
+    Sidebar.jsx        — document list, upload, recent chats
+    ChatWindow.jsx     — message list, empty state, example chips
+    ChatInput.jsx      — input bar, mode pills, settings panel
+    Message.jsx        — renders a single message (user or assistant)
+  index.css            — global CSS variables and animation keyframes
+```
+
+---
+
+## 11a. Streaming with Server-Sent Events
+
+The LLM generates tokens one at a time. Without streaming, the user stares at a
+blank screen for 5-10 seconds until the full response is ready. With streaming,
+each token appears as it is generated — feels instant.
+
+### How SSE works
+
+SSE (Server-Sent Events) is a one-way HTTP channel: the server keeps the
+connection open and pushes data chunks as they are ready. The client reads them
+as a stream rather than waiting for the full response.
+
+```
+Client                                  Server
+  │                                       │
+  │── POST /query/stream ────────────────>│
+  │                                       │ (retrieves chunks)
+  │<─ data: {"type":"text","content":"T"} │ token by token
+  │<─ data: {"type":"text","content":"he"}│
+  │<─ data: {"type":"text","content":" "} │
+  │   ...                                 │
+  │<─ data: {"type":"done", ...}          │ citations + metadata
+  │                                       │
+```
+
+### Backend: Python generator
+
+`generation.py` uses a **generator function** (`yield`) so each token is
+yielded immediately without buffering the full response:
+
+```python
+def generate_stream(self, question, context, retrieved_sources):
+    for chunk in self.client.chat.completions.create(
+        model=self.model, messages=[...], stream=True
+    ):
+        token = chunk.choices[0].delta.content or ""
+        if token:
+            yield {"type": "text", "content": token}
+
+    yield {"type": "done", "citations": [...], "model": "...", ...}
+```
+
+`query.py` wraps this in a FastAPI `StreamingResponse`:
+
+```python
+def event_stream():
+    for event in generation.generate_stream(...):
+        yield f"data: {json.dumps(event)}\n\n"  # SSE format: "data: ...\n\n"
+
+return StreamingResponse(event_stream(), media_type="text/event-stream",
+    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+```
+
+The `X-Accel-Buffering: no` header tells any reverse proxy (nginx) not to
+buffer the response — critical for streaming to actually work in production.
+
+### Frontend: ReadableStream
+
+`api.js` reads the SSE stream using the `fetch` API's `ReadableStream`:
+
+```javascript
+const res = await fetch(`/query/stream`, { method: 'POST', body: JSON.stringify({...}) });
+const reader = res.body.getReader();
+const decoder = new TextDecoder();
+let buffer = '';
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  buffer += decoder.decode(value, { stream: true });
+  const parts = buffer.split('\n\n');   // SSE events are separated by \n\n
+  buffer = parts.pop() ?? '';           // keep incomplete event in buffer
+
+  for (const part of parts) {
+    const data = JSON.parse(part.trim().slice(6)); // strip "data: " prefix
+    if (data.type === 'text')  onToken(data.content);
+    else if (data.type === 'done') onDone(data);
+    else if (data.type === 'error') throw new Error(data.content);
+  }
+}
+```
+
+**Why the buffer?** Network packets don't align with SSE event boundaries.
+A single `read()` call might contain half an event, or multiple events.
+The buffer accumulates chunks and splits on `\n\n` (the SSE event delimiter).
+
+### React state during streaming
+
+`App.jsx` maintains a single messages array. During streaming, the loading
+message is updated token-by-token via `setMessages`:
+
+```javascript
+// onToken — called for every streamed token
+(token) => {
+  setMessages(prev => prev.map(m =>
+    m.id === loadingMsg.id
+      ? { ...m, answer: (m.answer || '') + token }
+      : m
+  ));
+},
+
+// onDone — called once at the end with citations, model info, etc.
+(result) => {
+  setMessages(prev => prev.map(m =>
+    m.id === loadingMsg.id
+      ? { ...m, loading: false, ...result, elapsed, timestamp }
+      : m
+  ));
+}
+```
+
+`Message.jsx` detects the streaming state via `msg.loading && msg.answer` and
+renders partial text with a blinking cursor:
+
+```jsx
+if (msg.loading) {
+  if (!msg.answer) return <LoadingDots />;          // waiting for first token
+  return <ReactMarkdown>{msg.answer}</ReactMarkdown> // streaming in progress
+    + <span className="streaming-cursor" />;
+}
+```
+
+---
+
+## 11b. Component Architecture
+
+```
+App.jsx  (state owner)
+├── sessions[], messages[], loading, sourceFilter, sidebarCollapsed
+├── handleSend(question, mode, topK)  — calls queryRAGStream
+├── handleClear()                     — saves session, clears messages
+├── loadSession(session)              — restores saved session
+└── deleteSession(id)                 — removes from localStorage
+
+Sidebar.jsx  (receives: docs, sessions, callbacks)
+├── Upload zone — <label> wrapping <input type="file"> (reliable cross-browser)
+├── Document list — click to filter, hover to delete (2-step confirm)
+└── Recent chats — click to load, hover to delete (2-step confirm)
+
+ChatWindow.jsx  (receives: messages, sourceFilter, onChipClick)
+├── Empty state with example chips (shown when messages=[])
+└── Message list (role="log" aria-live="polite" for screen readers)
+
+ChatInput.jsx  (receives: onSend, onClear, disabled, pendingQuestion)
+├── Mode pills: Hybrid | Semantic | Keyword  (aria-pressed)
+├── Settings panel: Top-K slider  (collapsed by default)
+├── Textarea with ⌘K global focus shortcut
+└── pendingQuestion prop: chip clicks pass a question here,
+    useEffect fires onSend then clears it
+
+Message.jsx  (receives: msg)
+├── User bubble  (role: 'user')
+├── Loading state  (role: 'assistant', loading: true)
+├── Error state  (role: 'assistant', error: string)
+└── Answer card  (role: 'assistant', answer + citations + chunks)
+    ├── ReactMarkdown renders the answer text
+    ├── SOURCES: citation cards with color-coded confidence bars
+    │   clicking a citation highlights the matching source passage
+    ├── View source passages: collapsible chunk list
+    └── Footer: model · tokens · elapsed · timestamp
+```
+
+---
+
+## 11c. Session Persistence
+
+Chat sessions are saved to `localStorage` under `rag-sessions`.
+
+```javascript
+// Session shape
+{
+  id: 1234567890,          // Date.now() at save time
+  title: "How does att…",  // first user message, truncated to 55 chars
+  messages: [...],         // full message array
+  timestamp: "2025-01-01T12:00:00.000Z",
+}
+```
+
+**Save trigger:** clicking "New chat" calls `handleClear()`, which saves
+current messages (if any) before clearing. Sessions are not auto-saved on
+every message to avoid flooding localStorage.
+
+**Load:** clicking a session in the sidebar calls `loadSession(session)`,
+which sets `messages` to the saved array and sets `loadedSessionId` to track
+that these messages came from a saved session.
+
+**Duplicate prevention:** `loadedSessionId` state tracks whether the current
+messages originated from a saved session. `handleClear` and `loadSession` only
+call `saveSession` if `loadedSessionId` is null (i.e., messages are new/unsaved).
+Sending a new message clears `loadedSessionId`, marking the session as modified.
+
+**Delete:** the trash icon on each session item removes it from state and
+re-writes `localStorage` without that session.
+
+Max 10 sessions are kept; older ones are dropped automatically.
+
+---
+
+## 11d. Relevance Filtering
+
+The RAG pipeline always retrieves *something* — nearest-neighbor search has no
+concept of "nothing relevant exists". Without filtering, an unrelated question
+like "What happened in the Iran-US conflict?" would return the closest ML paper
+chunks and display them with misleading 100% confidence bars.
+
+### The solution: cosine similarity threshold
+
+Cosine similarity (the raw score from ChromaDB, before RRF) is the most
+reliable out-of-domain signal:
+
+- **Same domain:** similarity typically 0.5–0.8 (the query "lives" in the same
+  vector space as the documents)
+- **Adjacent domain:** 0.3–0.5
+- **Completely unrelated:** 0.1–0.25
+
+We use a threshold of **0.3**. If the best semantic score is below it, we
+return an empty result list immediately — no LLM call, no citations displayed.
+
+```python
+# In retrieval.py _hybrid_search():
+semantic = self._semantic_search(query, top_k=top_k * 2, ...)
+if relevance_threshold > 0:
+    if not semantic or semantic[0]["score"] < relevance_threshold:
+        return []   # short-circuit before BM25 or LLM
+```
+
+**Why gate on semantic, not BM25?** BM25 matches exact tokens. Common English
+words like "US", "conflict", "current" appear in almost every large document,
+so BM25 would return results for any English query. Semantic similarity is
+immune to this — it measures meaning, not word overlap.
+
+**Why check semantic before BM25 in hybrid mode?** The original implementation
+checked `if not semantic and not keyword: return []`. If BM25 returned *any*
+results (even for common words), the pipeline would proceed — bypassing the
+threshold entirely. The fix runs the semantic gate first and short-circuits
+before BM25 is even consulted.
 
 ---
 
