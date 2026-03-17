@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -43,7 +45,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   background: var(--bg);
   color: var(--text);
   height: 100vh;
@@ -94,11 +97,20 @@ body {
 }
 .msg-enter { animation: fadeUp 0.2s ease forwards; }
 
+/* Animated orb for empty state */
+@keyframes orbSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.06); }
+}
+
 /* Markdown in answers */
-.answer-body { font-size: 14.5px; line-height: 1.75; color: var(--text); }
-.answer-body p  { margin-bottom: 10px; }
+.answer-body { font-size: 15.5px; line-height: 1.82; color: var(--text); letter-spacing: -0.01em; }
+.answer-body p  { margin-bottom: 14px; }
 .answer-body p:last-child { margin-bottom: 0; }
-.answer-body ul, .answer-body ol { margin: 8px 0 10px 20px; }
+.answer-body ul, .answer-body ol { margin: 10px 0 14px 22px; }
 .answer-body li { margin-bottom: 5px; }
 .answer-body strong { color: #fff; font-weight: 600; }
 .answer-body code {
@@ -140,10 +152,45 @@ body {
 .session-item:hover button:first-child { background: var(--bg-surface) !important; }
 
 /* Example chips hover */
-button.ex-chip:hover,
-[style*="borderLeft: '3px solid var(--accent)'"]:hover {
+button.ex-chip:hover {
   background: var(--bg-surface) !important;
   border-color: var(--accent) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+button.ex-chip:active {
+  transform: translateY(0);
+}
+
+/* Send button hover/active */
+.send-btn:hover:not(:disabled) {
+  background: #7c9bff !important;
+  transform: scale(1.06);
+  box-shadow: 0 4px 16px rgba(108,143,255,0.5) !important;
+}
+.send-btn:active:not(:disabled) {
+  transform: scale(0.95);
+  box-shadow: 0 1px 4px rgba(108,143,255,0.2) !important;
+}
+
+/* Citation card hover lift */
+.cit-card {
+  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
+  cursor: pointer;
+}
+.cit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+}
+.cit-card:active {
+  transform: translateY(0);
+}
+
+/* Toggle/source passage pill hover */
+.toggle-btn:hover {
+  border-color: var(--accent-border) !important;
+  color: var(--accent) !important;
+  background: var(--accent-glow) !important;
 }
 
 /* Sidebar upload button hover */
@@ -174,3 +221,7 @@ aside[aria-label="Sidebar (collapsed)"] button:hover {
 /* Doc item confirm delete */
 .doc-item .confirm-row { display: none; }
 .doc-item:hover .confirm-row { display: flex; }
+
+/* Horizontal citation scroll — hide scrollbar */
+.cit-scroll::-webkit-scrollbar { display: none; }
+.cit-scroll { scrollbar-width: none; }

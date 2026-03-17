@@ -62,7 +62,7 @@ export default function Sidebar({
   // ── Collapsed view ───────────────────────────────────────────────────────
   if (collapsed) {
     return (
-      <aside style={s.sidebarCollapsed} aria-label="Sidebar (collapsed)">
+      <aside style={s.sidebarCollapsed} aria-label="Sidebar (collapsed)" data-collapsed="true">
         {/* Brand icon */}
         <div style={s.collapsedBrand} title="Research Copilot">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -304,7 +304,8 @@ const s = {
     boxShadow: '2px 0 20px rgba(0,0,0,0.35)',
     display: 'flex', flexDirection: 'column',
     height: '100vh',
-    transition: 'width 0.2s ease',
+    transition: 'width 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+    overflow: 'hidden',
   },
   brand: {
     display: 'flex', alignItems: 'center', gap: 10,
@@ -364,7 +365,7 @@ const s = {
     background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer',
     padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center',
   },
-  docList: { overflowY: 'auto', padding: '0 8px', maxHeight: 200 },
+  docList: { overflowY: 'auto', padding: '0 8px', flex: 1, minHeight: 60 },
   docItem: {
     display: 'flex', alignItems: 'center', gap: 8,
     padding: '7px 10px', borderRadius: 'var(--r-md)', cursor: 'pointer',
@@ -425,7 +426,8 @@ const s = {
     boxShadow: '2px 0 20px rgba(0,0,0,0.35)',
     display: 'flex', flexDirection: 'column', alignItems: 'center',
     height: '100vh', paddingTop: 10, gap: 4,
-    transition: 'width 0.2s ease',
+    transition: 'width 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
+    overflow: 'hidden',
   },
   collapsedBrand: {
     width: 34, height: 34, background: 'var(--accent-glow)', border: '1px solid var(--accent-border)',

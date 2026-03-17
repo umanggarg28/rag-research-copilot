@@ -13,14 +13,14 @@ export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
       <div style={s.empty}>
         <div style={s.emptyCard}>
           <div style={s.emptyGlow} />
-          <div style={s.emptyIcon}>
-            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
-            </svg>
+          {/* Animated gradient orb */}
+          <div style={s.orbWrap}>
+            <div style={s.orbOuter} />
+            <div style={s.orbInner} />
           </div>
-          <h2 style={s.emptyTitle}>Ask anything about your papers</h2>
+          <h2 style={s.emptyTitle}>What would you like to know?</h2>
           <p style={s.emptyDesc}>
-            Upload PDFs via the sidebar. Answers are grounded in your documents with page citations.
+            Answers are grounded in your documents with page-level citations.
           </p>
           <div style={s.examplesLabel}>Try asking</div>
           <div style={s.examples}>
@@ -31,6 +31,7 @@ export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
             ].map(({ q, icon }) => (
               <button
                 key={q}
+                className="ex-chip"
                 style={s.exChip}
                 onClick={() => onChipClick(q)}
                 aria-label={`Ask: ${q}`}
@@ -118,11 +119,30 @@ const s = {
     background: 'radial-gradient(circle, rgba(108,143,255,0.08) 0%, transparent 70%)',
     pointerEvents: 'none',
   },
-  emptyIcon: {
-    marginBottom: 20,
+  orbWrap: {
+    width: 64,
+    height: 64,
+    margin: '0 auto 24px',
+    position: 'relative',
     display: 'flex',
+    alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.9,
+  },
+  orbOuter: {
+    position: 'absolute',
+    inset: 0,
+    borderRadius: '50%',
+    background: 'conic-gradient(from 180deg, #6c8fff 0deg, #a78bfa 120deg, #60a5fa 240deg, #6c8fff 360deg)',
+    animation: 'orbSpin 8s linear infinite',
+    filter: 'blur(1px)',
+    opacity: 0.85,
+  },
+  orbInner: {
+    position: 'absolute',
+    inset: 8,
+    borderRadius: '50%',
+    background: 'var(--bg)',
+    zIndex: 1,
   },
   emptyTitle: { fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 10 },
   emptyDesc: { fontSize: 14, color: 'var(--text-dim)', lineHeight: 1.7, marginBottom: 32 },
@@ -130,7 +150,7 @@ const s = {
     fontSize: 11,
     fontWeight: 600,
     color: 'var(--text-faint)',
-    letterSpacing: '0.1em',
+    letterSpacing: '0.08em',
     marginBottom: 12,
     textTransform: 'uppercase',
   },
@@ -148,7 +168,7 @@ const s = {
     cursor: 'pointer',
     width: '100%',
     fontFamily: 'inherit',
-    transition: 'background 0.15s, border-color 0.15s, transform 0.1s',
+    transition: 'background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.1s',
     color: 'var(--text-dim)',
   },
   exIcon: { fontSize: 16, flexShrink: 0 },

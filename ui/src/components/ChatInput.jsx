@@ -19,7 +19,6 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
     if (pendingQuestion) {
       setText(pendingQuestion);
       onPendingConsumed();
-      // Submit after state update
       setTimeout(() => {
         onSend(pendingQuestion, mode, topK);
         setText('');
@@ -61,10 +60,11 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
   }
 
   const canSend = text.trim().length > 0 && !disabled;
+  const charCount = text.length;
 
   return (
     <div style={s.wrapper}>
-      {/* Toolbar: mode pills always visible + clear button */}
+      {/* Toolbar: mode pills always visible + settings + clear */}
       <div style={s.toolbar}>
         <div style={s.modeGroup} role="group" aria-label="Search mode">
           {MODES.map(m => (
@@ -110,27 +110,34 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
         </div>
       </div>
 
-      {/* Expandable settings — Top-K only */}
-      {showSettings && (
-        <div style={s.settings}>
-          <div style={s.settingRow}>
-            <span style={s.settingLabel}>
-              Top-K results
-              <span style={s.settingValue}> {topK}</span>
-            </span>
-            <input
-              type="range" min={1} max={15} value={topK}
-              onChange={e => setTopK(Number(e.target.value))}
-              style={s.slider}
-              aria-label={`Top K results: ${topK}`}
-            />
-          </div>
-          <p style={s.settingHint}>
-            Number of document chunks retrieved before generating an answer.
-            Higher = more context, slower response.
-          </p>
+      {/* Animated settings panel — always mounted, height-transitioned */}
+      <div style={{
+        ...s.settings,
+        maxHeight: showSettings ? 120 : 0,
+        opacity: showSettings ? 1 : 0,
+        marginBottom: showSettings ? 10 : 0,
+        paddingTop: showSettings ? 12 : 0,
+        paddingBottom: showSettings ? 12 : 0,
+        overflow: 'hidden',
+        transition: 'max-height 0.2s ease, opacity 0.15s ease, margin-bottom 0.2s ease, padding 0.2s ease',
+      }}>
+        <div style={s.settingRow}>
+          <span style={s.settingLabel}>
+            Top-K results
+            <span style={s.settingValue}> {topK}</span>
+          </span>
+          <input
+            type="range" min={1} max={15} value={topK}
+            onChange={e => setTopK(Number(e.target.value))}
+            style={s.slider}
+            aria-label={`Top K results: ${topK}`}
+          />
         </div>
-      )}
+        <p style={s.settingHint}>
+          Number of document chunks retrieved before generating an answer.
+          Higher = more context, slower response.
+        </p>
+      </div>
 
       {/* Input box */}
       <div style={{ ...s.box, ...(focused ? s.boxFocused : {}) }}>
@@ -148,7 +155,8 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
           aria-label="Question input"
         />
         <button
-          style={{ ...s.sendBtn, opacity: canSend ? 1 : 0.3 }}
+          className="send-btn"
+          style={{ ...s.sendBtn, opacity: canSend ? 1 : 0.3, transition: 'all 0.1s ease' }}
           onClick={submit}
           disabled={!canSend}
           aria-label="Send message"
@@ -166,17 +174,32 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
         </button>
       </div>
 
-      <p style={s.hint}>
-        <kbd style={s.kbd}>Enter</kbd> to send ·
-        <kbd style={s.kbd}>Shift+Enter</kbd> for newline ·
-        <kbd style={s.kbd}>⌘K</kbd> to focus
-      </p>
+      <div style={s.hintRow}>
+        <p style={s.hint}>
+          <kbd style={s.kbd}>Enter</kbd> to send ·
+          <kbd style={s.kbd}>Shift+Enter</kbd> for newline ·
+          <kbd style={s.kbd}>⌘K</kbd> to focus
+        </p>
+        {charCount > 50 && (
+          <span style={{ ...s.charCount, color: charCount > 500 ? 'var(--amber)' : 'var(--text-faint)' }}>
+            {charCount}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
 const s = {
-  wrapper: { padding: '8px 20px 14px', borderTop: '1px solid var(--border)' },
+  wrapper: {
+    padding: '8px 20px 14px',
+    borderTop: '1px solid var(--border)',
+    background: 'rgba(10, 12, 20, 0.85)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    position: 'relative',
+    zIndex: 10,
+  },
 
   toolbar: {
     display: 'flex',
@@ -240,8 +263,8 @@ const s = {
     background: 'var(--bg-surface)',
     border: '1px solid var(--border)',
     borderRadius: 'var(--r-md)',
-    padding: '12px 14px',
-    marginBottom: 10,
+    paddingLeft: 14,
+    paddingRight: 14,
     display: 'flex',
     flexDirection: 'column',
     gap: 10,
@@ -279,9 +302,9 @@ const s = {
     minHeight: 24,
   },
   sendBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 'var(--r-md)',
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
     background: 'var(--accent)',
     border: 'none',
     color: '#fff',
@@ -290,11 +313,12 @@ const s = {
     justifyContent: 'center',
     flexShrink: 0,
     cursor: 'pointer',
-    transition: 'opacity 0.15s',
     boxShadow: '0 2px 8px rgba(108,143,255,0.3)',
   },
 
-  hint: { fontSize: 11, color: 'var(--text-faint)', marginTop: 7, textAlign: 'center' },
+  hintRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 7 },
+  hint: { fontSize: 11, color: 'var(--text-faint)' },
+  charCount: { fontSize: 11, fontWeight: 500, transition: 'color 0.2s' },
   kbd: {
     background: 'var(--bg-surface)',
     border: '1px solid var(--border)',

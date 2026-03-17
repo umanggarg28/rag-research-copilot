@@ -80,10 +80,15 @@ export default function Message({ msg }) {
       return (
         <div className="msg-enter" style={s.assistantRow}>
           <div style={s.card}>
-            <div style={s.dots}>
-              {[0, 1, 2].map(i => (
-                <span key={i} style={{ ...s.dot, animationDelay: `${i * 0.18}s` }} />
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={s.dots}>
+                {[0, 1, 2].map(i => (
+                  <span key={i} style={{ ...s.dot, animationDelay: `${i * 0.18}s` }} />
+                ))}
+              </div>
+              <span style={{ fontSize: 12, color: 'var(--text-faint)', fontStyle: 'italic' }}>
+                Searching documents…
+              </span>
             </div>
           </div>
         </div>
@@ -161,17 +166,17 @@ export default function Message({ msg }) {
             <div style={s.divider} />
             <div>
               <p style={s.sectionLabel}>SOURCES</p>
-              <div style={s.citCards}>
+              <div className="cit-scroll" style={s.citCards}>
                 {citations.map((c, i) => {
                   const col = citationColor(c.pct);
                   return (
                     <div
                       key={i}
+                      className="cit-card"
                       style={{
                         ...s.citCard,
                         background: col.bg,
                         border: `1px solid ${col.border}`,
-                        cursor: 'pointer',
                         outline: highlightedKey === `${c.source}::${c.page}` ? `2px solid ${col.border}` : 'none',
                         outlineOffset: 2,
                       }}
@@ -201,6 +206,7 @@ export default function Message({ msg }) {
           <>
             <div style={s.divider} />
             <button
+              className="toggle-btn"
               style={s.toggleBtn}
               onClick={() => setShowChunks(v => !v)}
               aria-expanded={showChunks}
@@ -253,7 +259,7 @@ export default function Message({ msg }) {
 }
 
 const s = {
-  userRow: { display: 'flex', justifyContent: 'flex-end', marginBottom: 12 },
+  userRow: { display: 'flex', justifyContent: 'flex-end', marginBottom: 4, marginTop: 8 },
   userBubble: {
     maxWidth: '70%',
     background: 'linear-gradient(135deg, var(--accent-dim), #5570d4)',
@@ -266,14 +272,14 @@ const s = {
     fontWeight: 450,
   },
 
-  assistantRow: { display: 'flex', justifyContent: 'flex-start', marginBottom: 12 },
+  assistantRow: { display: 'flex', justifyContent: 'flex-start', marginBottom: 24 },
   card: {
     width: '100%',
     background: 'var(--bg-panel)',
     border: '1px solid var(--border)',
-    borderLeft: '3px solid var(--accent)',
+    borderTop: '1px solid rgba(108,143,255,0.15)',
     padding: '16px 18px',
-    borderRadius: '4px 14px 14px 14px',
+    borderRadius: 'var(--r-lg)',
     display: 'flex',
     flexDirection: 'column',
     gap: 0,
@@ -325,11 +331,10 @@ const s = {
     marginBottom: 10,
   },
 
-  citCards: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  citCards: { display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', gap: 8, paddingBottom: 4 },
   citCard: {
-    flex: '1 1 160px',
-    minWidth: 140,
-    maxWidth: 220,
+    flex: '0 0 auto',
+    width: 180,
     borderRadius: 'var(--r-md)',
     padding: '10px 12px',
   },
@@ -346,18 +351,21 @@ const s = {
   citPage: { fontSize: 11, fontWeight: 700, flexShrink: 0 },
 
   toggleBtn: {
-    background: 'none',
-    border: 'none',
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border)',
+    borderRadius: 20,
     color: 'var(--text-dim)',
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: 500,
     cursor: 'pointer',
-    padding: '2px 0',
+    padding: '4px 12px',
     textAlign: 'left',
     fontFamily: 'inherit',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    transition: 'color 0.15s',
+    transition: 'border-color 0.15s, color 0.15s, background 0.15s',
+    letterSpacing: '0.01em',
   },
   chunksList: { marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 },
   chunk: {
