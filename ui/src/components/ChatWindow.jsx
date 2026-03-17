@@ -12,17 +12,16 @@ export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
     return (
       <div style={s.empty}>
         <div style={s.emptyCard}>
-          <div style={s.emptyGlow} />
-          {/* Animated gradient orb */}
+          {/* Anthropic-style diamond mark */}
           <div style={s.orbWrap}>
-            <div style={s.orbOuter} />
-            <div style={s.orbInner} />
+            <svg width="40" height="40" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+              <path d="M40 4L47 33L76 40L47 47L40 76L33 47L4 40L33 33Z" fill="var(--accent)" opacity="0.9"/>
+            </svg>
           </div>
-          <h2 style={s.emptyTitle}>What would you like to know?</h2>
+          <h2 style={s.emptyTitle}>How can I help you today?</h2>
           <p style={s.emptyDesc}>
-            Answers are grounded in your documents with page-level citations.
+            Upload a research paper to get grounded answers with page-level citations.
           </p>
-          <div style={s.examplesLabel}>Try asking</div>
           <div style={s.examples}>
             {[
               'How does multi-head attention work?',
@@ -72,12 +71,13 @@ const s = {
   scrollOuter: {
     flex: 1,
     overflowY: 'auto',
-    padding: '24px 28px 16px',
+    padding: '0 0 80px 0',
   },
   container: {
-    maxWidth: 760,
+    maxWidth: 768,
     margin: '0 auto',
     width: '100%',
+    padding: '24px 28px 0',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -98,57 +98,23 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
-    background: 'radial-gradient(ellipse at 50% 40%, rgba(198,97,63,0.05) 0%, transparent 65%)',
+    padding: '40px 28px',
   },
   emptyCard: {
-    maxWidth: 520,
+    maxWidth: 500,
     width: '100%',
     textAlign: 'center',
-    position: 'relative',
-  },
-  emptyGlow: {
-    position: 'absolute',
-    top: -60,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: 320,
-    height: 320,
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(198,97,63,0.06) 0%, transparent 70%)',
-    pointerEvents: 'none',
   },
   orbWrap: {
-    width: 72,
-    height: 72,
-    margin: '0 auto 28px',
-    position: 'relative',
+    width: 48,
+    height: 48,
+    margin: '0 auto 20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  orbOuter: {
-    position: 'absolute',
-    inset: 0,
-    borderRadius: '50%',
-    /* Clear 90-degree arc — visibly spinning */
-    background: 'conic-gradient(from 0deg, #c6613f 0deg, #d97757 90deg, transparent 90deg)',
-    animation: 'orbSpin 1.8s linear infinite',
-  },
-  orbInner: {
-    position: 'absolute',
-    inset: 10,
-    borderRadius: '50%',
-    background: 'var(--bg)',
-    zIndex: 1,
-  },
-  emptyTitle: { fontSize: 26, fontWeight: 500, color: 'var(--text)', marginBottom: 10, fontFamily: '"Anthropic Serif", Georgia, serif' },
-  emptyDesc: { fontSize: 14, color: 'var(--text-dim)', lineHeight: 1.7, marginBottom: 32 },
-  examplesLabel: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: 'var(--text-faint)',
-    letterSpacing: '0.08em',
-    marginBottom: 12,
-    textTransform: 'uppercase',
-  },
+  emptyTitle: { fontSize: 28, fontWeight: 400, color: 'var(--text)', marginBottom: 10, fontFamily: '"Anthropic Serif", Georgia, serif', letterSpacing: '-0.02em' },
+  emptyDesc: { fontSize: 15, color: 'var(--text-dim)', lineHeight: 1.6, marginBottom: 28 },
   examples: { display: 'flex', flexDirection: 'column', gap: 8 },
   exChip: {
     display: 'flex',
@@ -156,17 +122,14 @@ const s = {
     gap: 10,
     background: 'var(--bg-panel)',
     border: '1px solid var(--border)',
-    borderLeft: '3px solid var(--accent)',
-    borderRadius: 'var(--r-md)',
-    padding: '12px 16px',
+    borderRadius: 'var(--r-lg)',
+    padding: '13px 16px',
     textAlign: 'left',
     cursor: 'pointer',
     width: '100%',
     fontFamily: 'inherit',
-    transition: 'background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.1s',
-    color: 'var(--text-dim)',
+    transition: 'background 0.12s, border-color 0.12s, transform 0.1s, box-shadow 0.1s',
   },
-  exIcon: { fontSize: 16, flexShrink: 0 },
-  exText: { fontSize: 13, color: 'var(--text)', lineHeight: 1.5, flex: 1 },
-  exArrow: { flexShrink: 0, color: 'var(--accent)', opacity: 0.6 },
+  exText: { fontSize: 14, color: 'var(--text)', lineHeight: 1.5, flex: 1 },
+  exArrow: { flexShrink: 0, color: 'var(--text-faint)', opacity: 0.5 },
 };

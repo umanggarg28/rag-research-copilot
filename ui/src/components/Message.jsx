@@ -131,7 +131,12 @@ export default function Message({ msg }) {
     <div className="msg-enter msg-card" style={s.assistantRow}>
       <div style={s.card}>
 
-        {/* Copy button — hover-revealed via CSS */}
+        {/* Answer */}
+        <div className="answer-body">
+          <ReactMarkdown>{msg.answer}</ReactMarkdown>
+        </div>
+
+        {/* Copy button — hover-revealed via CSS, below the answer */}
         <button
           className="copy-btn"
           style={s.copyBtn}
@@ -154,11 +159,6 @@ export default function Message({ msg }) {
             </>
           )}
         </button>
-
-        {/* Answer */}
-        <div className="answer-body">
-          <ReactMarkdown>{msg.answer}</ReactMarkdown>
-        </div>
 
         {/* Citations */}
         {citations.length > 0 && (
@@ -259,41 +259,35 @@ export default function Message({ msg }) {
 }
 
 const s = {
-  userRow: { display: 'flex', justifyContent: 'flex-end', marginBottom: 4, marginTop: 8 },
+  userRow: { display: 'flex', justifyContent: 'flex-end', marginBottom: 6, marginTop: 28 },
   userBubble: {
-    maxWidth: '70%',
+    maxWidth: '72%',
     background: 'var(--bg-surface)',
     color: 'var(--text)',
     border: '1px solid var(--border)',
-    padding: '10px 16px',
-    borderRadius: '14px 14px 4px 14px',
-    fontSize: 14,
-    lineHeight: 1.65,
-    boxShadow: 'var(--shadow-sm)',
+    padding: '12px 18px',
+    borderRadius: '18px 18px 4px 18px',
+    fontSize: 15,
+    lineHeight: 1.6,
     fontWeight: 400,
   },
 
-  assistantRow: { display: 'flex', justifyContent: 'flex-start', marginBottom: 24 },
+  assistantRow: { display: 'flex', justifyContent: 'flex-start', marginBottom: 8 },
   card: {
     width: '100%',
-    background: 'var(--bg-panel)',
-    border: '1px solid var(--border)',
-    borderTop: '1px solid rgba(198,97,63,0.15)',
-    padding: '16px 18px',
-    borderRadius: 'var(--r-lg)',
+    background: 'transparent',
+    border: 'none',
+    padding: '4px 0',
+    borderRadius: 0,
     display: 'flex',
     flexDirection: 'column',
     gap: 0,
-    boxShadow: 'var(--shadow-md)',
     position: 'relative',
   },
 
   errorRow: { display: 'flex', alignItems: 'center', gap: 8 },
 
   copyBtn: {
-    position: 'absolute',
-    top: 10,
-    right: 12,
     background: 'var(--bg-surface)',
     border: '1px solid var(--border)',
     borderRadius: 'var(--r-sm)',
@@ -302,11 +296,11 @@ const s = {
     color: 'var(--text-dim)',
     cursor: 'pointer',
     fontWeight: 500,
-    zIndex: 1,
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: 5,
     fontFamily: 'inherit',
+    alignSelf: 'flex-start',
   },
 
   dots: { display: 'flex', gap: 5, padding: '4px 2px', alignItems: 'center' },

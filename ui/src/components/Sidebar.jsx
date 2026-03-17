@@ -251,13 +251,8 @@ export default function Sidebar({
                 <button style={s.sessionItem} onClick={() => onLoadSession(sess)}
                   title={sess.title} aria-label={`Load session: ${sess.title}`}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                  <div style={s.sessionInfo}>
-                    <span style={s.sessionTitle}>{sess.title}</span>
-                    <span style={s.sessionTime}>{timeAgo(sess.timestamp)}</span>
-                  </div>
+                  <span style={s.sessionTitle}>{sess.title}</span>
+                  <span style={s.sessionTime}>{timeAgo(sess.timestamp)}</span>
                 </button>
                 {confirmDeleteSession === sess.id ? (
                   <div style={{ display: 'flex', gap: 3, flexShrink: 0, padding: '2px 0' }}>
@@ -393,17 +388,16 @@ const s = {
     borderRadius: 'var(--r-md)', marginBottom: 2,
   },
   sessionItem: {
-    display: 'flex', alignItems: 'flex-start', gap: 8, flex: 1, minWidth: 0,
-    padding: '7px 10px', borderRadius: 'var(--r-md)', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0,
+    padding: '8px 10px', borderRadius: 'var(--r-md)', cursor: 'pointer',
     background: 'none', border: 'none', fontFamily: 'inherit',
     textAlign: 'left', transition: 'background 0.15s',
   },
-  sessionInfo: { flex: 1, overflow: 'hidden' },
   sessionTitle: {
-    display: 'block', fontSize: 12, color: 'var(--text-dim)', fontWeight: 500,
+    flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 400,
     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
   },
-  sessionTime: { fontSize: 10, color: 'var(--text-faint)' },
+  sessionTime: { fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 },
 
   footer: { padding: '10px 16px', borderTop: '1px solid var(--border)', marginTop: 'auto' },
   footerLink: { fontSize: 12, color: 'var(--text-faint)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 },
