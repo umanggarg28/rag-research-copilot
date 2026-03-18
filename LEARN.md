@@ -25,6 +25,7 @@ Read it alongside the code. Run `python demo_concepts.py` to see the outputs liv
     - 11b. Component Architecture
     - 11c. Session Persistence
     - 11d. Relevance Filtering
+    - 11e. Conditional LLM Parameters
 
 ---
 
@@ -1323,28 +1324,43 @@ Chat sessions are saved to `localStorage` under `rag-sessions`.
 ```javascript
 // Session shape
 {
-  id: 1234567890,          // Date.now() at save time
+  id: 1234567890,          // Date.now() assigned when first message is sent
   title: "How does att…",  // first user message, truncated to 55 chars
   messages: [...],         // full message array
   timestamp: "2025-01-01T12:00:00.000Z",
 }
 ```
 
-**Save trigger:** clicking "New chat" calls `handleClear()`, which saves
-current messages (if any) before clearing. Sessions are not auto-saved on
-every message to avoid flooding localStorage.
+**Session ID tracking:** A `sessionIdRef` (React ref, not state) holds the
+current session's ID. It's assigned when the first message is sent in a new
+conversation, or set to the loaded session's ID when restoring from history.
+Using a ref (not state) means it never triggers re-renders and is always
+current inside async callbacks.
+
+**Auto-save after every response:** `persistSession()` is called inside the
+`onDone` callback of every completed streaming response. This means a page
+refresh never loses the conversation — it's persisted to localStorage as soon
+as the LLM finishes answering.
+
+```javascript
+// Inside handleSend's onDone callback:
+setMessages(prev => {
+  const updated = prev.map(m => m.id === loadingMsg.id ? { ...m, ...result } : m);
+  persistSession(updated, sid);  // upsert to localStorage immediately
+  return updated;
+});
+```
+
+**Upsert, not append:** `persistSession` checks if the session ID already
+exists in the list. If yes, it updates that entry. If no, it prepends a new
+one. This means adding questions to a loaded session updates it in place rather
+than creating a duplicate entry.
 
 **Load:** clicking a session in the sidebar calls `loadSession(session)`,
-which sets `messages` to the saved array and sets `loadedSessionId` to track
-that these messages came from a saved session.
+which saves the current conversation first, then restores the selected session
+and sets `sessionIdRef` to its ID (so subsequent questions update that session).
 
-**Duplicate prevention:** `loadedSessionId` state tracks whether the current
-messages originated from a saved session. `handleClear` and `loadSession` only
-call `saveSession` if `loadedSessionId` is null (i.e., messages are new/unsaved).
-Sending a new message clears `loadedSessionId`, marking the session as modified.
-
-**Delete:** the trash icon on each session item removes it from state and
-re-writes `localStorage` without that session.
+**Delete:** the trash icon removes it from state and rewrites `localStorage`.
 
 Max 10 sessions are kept; older ones are dropped automatically.
 
@@ -1373,7 +1389,7 @@ return an empty result list immediately — no LLM call, no citations displayed.
 ```python
 # In retrieval.py _hybrid_search():
 semantic = self._semantic_search(query, top_k=top_k * 2, ...)
-if relevance_threshold > 0:
+if relevance_threshold > 0 and not source_filter:
     if not semantic or semantic[0]["score"] < relevance_threshold:
         return []   # short-circuit before BM25 or LLM
 ```
@@ -1388,6 +1404,105 @@ checked `if not semantic and not keyword: return []`. If BM25 returned *any*
 results (even for common words), the pipeline would proceed — bypassing the
 threshold entirely. The fix runs the semantic gate first and short-circuits
 before BM25 is even consulted.
+
+**Why skip the threshold when `source_filter` is set?** If the user has
+explicitly filtered to a specific document, they want answers from it regardless
+of how the query scores. "Summarize this paper" has low cosine similarity to
+any specific chunk (it doesn't match any passage verbatim), but it's a
+completely valid request. The threshold is a domain guard — once the user has
+chosen a domain explicitly, it shouldn't apply.
+
+**Threshold transparency:** When no results are returned, the system peeks at
+the best score and includes it in the response message:
+
+```
+"No relevant content found. Best match score was 0.24 (threshold: 0.30).
+Try rephrasing or switching to keyword search mode."
+```
+
+This turns an opaque failure into a debuggable one — you can see exactly how
+close you were and what to try next.
+
+---
+
+## 11e. Conditional LLM Parameters
+
+Not all queries need the same LLM settings. Two very different query types
+flow through this app:
+
+- **Technical:** "What BLEU score was achieved on WMT 2014?" — needs a precise,
+  deterministic answer. Numbers must be exact, not paraphrased.
+- **Creative:** "Explain the attention mechanism intuitively" — needs an
+  engaging, clear explanation. Some variation and analogy is desirable.
+
+The key parameter that controls this is **temperature**:
+
+| Temperature | Effect | Best for |
+|---|---|---|
+| 0.0–0.2 | Near-deterministic. Model picks the highest-probability token each step. | Factual lookups, numbers, definitions |
+| 0.5–0.8 | More varied. Model samples from a wider distribution. | Explanations, summaries, analogies |
+| 1.0+ | Very random. Can be creative or incoherent. | Creative writing (not RAG) |
+
+### Query Classification
+
+The app classifies each query before calling the LLM using **weighted signal
+matching**. Each signal word has a weight reflecting how strongly it indicates
+its type:
+
+```python
+_CREATIVE_SIGNALS = {
+    "intuitively": 3, "analogy": 3, "eli5": 3,   # strong — unambiguous
+    "summarize": 2, "overview": 2,                 # medium
+    "explain": 1, "describe": 1,                   # weak — also in technical queries
+}
+_TECHNICAL_SIGNALS = {
+    "bleu": 3, "formula": 3, "equation": 3,        # strong — domain-specific
+    "score": 2, "metric": 2, "accuracy": 2,        # medium
+    "what is the": 1, "algorithm": 1,              # weak — generic patterns
+}
+```
+
+Why weighted instead of raw counts? Because "explain" (weak creative, weight=1)
+should not override "BLEU score" (strong technical, weight=3+2). Without weights,
+"Explain what BLEU score was used?" would classify as creative — wrong.
+
+Weighted sums are compared. **Technical wins ties** because precision matters
+more for factual queries than warmth does for explanatory ones.
+
+```python
+creative_score  = sum(w for s, w in _CREATIVE_SIGNALS.items()  if s in query)
+technical_score = sum(w for s, w in _TECHNICAL_SIGNALS.items() if s in query)
+query_type = "creative" if creative_score > technical_score else "technical"
+```
+
+### What Changes Per Type
+
+```python
+_PARAMS = {
+    "technical": {"temperature": 0.1, "max_tokens": 1024},
+    "creative":  {"temperature": 0.7, "max_tokens": 1536},
+}
+```
+
+The system prompt also shifts:
+- **Technical:** "Be concise and exact. Preserve numbers, formulas, and
+  technical terms verbatim."
+- **Creative:** "Explain clearly and engagingly. Use analogies or simple
+  language where it helps intuition. Write in flowing prose."
+
+### Auto Top-K for Summarization
+
+Summarization queries ("summarize", "overview", "what is this paper about")
+need broad coverage — you want chunks from throughout the document, not just
+the 5 most similar passages. The app auto-bumps top_k to 15 for these queries:
+
+```python
+is_summary_query = any(kw in q_lower for kw in _SUMMARY_KEYWORDS)
+effective_top_k = max(request.top_k or 5, 15) if is_summary_query else request.top_k
+```
+
+This is done in the router (before retrieval) so the user's configured top_k
+still applies for normal queries.
 
 ---
 
@@ -1420,10 +1535,12 @@ python demo_concepts.py
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | LLM says "I don't have information" | Right content not retrieved | Increase TOP_K, check /search endpoint |
+| "No relevant content — best match 0.24" | Query below relevance threshold | Rephrase, switch to keyword mode, or lower threshold |
 | Irrelevant chunks retrieved | Query too vague | Try keyword mode, rephrase query |
-| Wrong page numbers | Page marker stripping by PDF | Inspect chunk metadata via /search |
+| "Summarize paper" returns shallow answer | Top-K too low for coverage | Auto-bumped to 15 for summary queries; raise TOP_K in settings for more |
 | Slow ingestion | Large PDF + CPU embedding | Reduce batch_size, use GPU if available |
 | Duplicate chunks on re-ingest | Expected behavior — upsert | Safe to ignore, IDs are stable |
+| Scanned / image-based PDF returns nothing | pypdf can't extract image text | Pre-process with OCR (e.g. tesseract) before uploading |
 
 ---
 
