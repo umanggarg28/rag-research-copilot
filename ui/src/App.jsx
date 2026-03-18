@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatWindow from './components/ChatWindow';
 import ChatInput from './components/ChatInput';
@@ -17,13 +17,16 @@ export default function App() {
   const [sourceFilter, setSourceFilter] = useState(null);
   const [pendingQuestion, setPendingQuestion] = useState(null);
   const [sessions, setSessions] = useState(loadSessions);
-  const [loadedSessionId, setLoadedSessionId] = useState(null); // tracks if current msgs came from a saved session
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem('sidebar-collapsed') === 'true'
   );
   const [theme, setTheme] = useState(
-    () => localStorage.getItem('theme') ?? 'auto'
+    () => localStorage.getItem('theme') ?? 'light'
   );
+
+  // Stable ref for the current session ID — survives re-renders without causing them.
+  // Set when the first message is sent (new convo) or when a session is loaded.
+  const sessionIdRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -31,11 +34,7 @@ export default function App() {
   }, [theme]);
 
   function toggleTheme() {
-    setTheme(t => {
-      if (t === 'auto') return 'dark';
-      if (t === 'dark') return 'light';
-      return 'auto';
-    });
+    setTheme(t => t === 'light' ? 'dark' : 'light');
   }
 
   const refreshDocs = useCallback(async () => {
@@ -44,25 +43,35 @@ export default function App() {
 
   useEffect(() => { refreshDocs(); }, [refreshDocs]);
 
-  function saveSession(msgs) {
+  /**
+   * Upsert a session in localStorage. Updates the existing entry if the session
+   * ID already exists, otherwise prepends a new one (capped at 10 sessions).
+   */
+  function persistSession(msgs, sessionId) {
     const firstQ = msgs.find(m => m.role === 'user')?.content;
-    if (!firstQ) return;
+    if (!firstQ || !sessionId) return;
+
     const session = {
-      id: Date.now(),
+      id: sessionId,
       title: firstQ.slice(0, 55),
       messages: msgs,
       timestamp: new Date().toISOString(),
     };
-    const updated = [session, ...sessions].slice(0, 10);
-    setSessions(updated);
-    localStorage.setItem('rag-sessions', JSON.stringify(updated));
+
+    setSessions(prev => {
+      const exists = prev.some(s => s.id === sessionId);
+      const updated = exists
+        ? prev.map(s => s.id === sessionId ? session : s)
+        : [session, ...prev].slice(0, 10);
+      localStorage.setItem('rag-sessions', JSON.stringify(updated));
+      return updated;
+    });
   }
 
   function handleClear() {
-    // Only save if messages aren't already a saved session (no new messages added)
-    if (messages.length > 0 && !loadedSessionId) saveSession(messages);
+    if (messages.length > 0) persistSession(messages, sessionIdRef.current);
     setMessages([]);
-    setLoadedSessionId(null);
+    sessionIdRef.current = null;
   }
 
   function deleteSession(id) {
@@ -72,10 +81,9 @@ export default function App() {
   }
 
   function loadSession(session) {
-    // Only save current messages if they're a new unsaved conversation
-    if (messages.length > 0 && !loadedSessionId) saveSession(messages);
+    if (messages.length > 0) persistSession(messages, sessionIdRef.current);
     setMessages(session.messages);
-    setLoadedSessionId(session.id);
+    sessionIdRef.current = session.id;
   }
 
   function toggleSidebar() {
@@ -85,13 +93,19 @@ export default function App() {
   }
 
   async function handleSend(question, mode, topK) {
+    // Assign a session ID the first time a message is sent in this conversation
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = Date.now();
+    }
+
     const userMsg    = { id: ++msgId, role: 'user', content: question };
     const loadingMsg = { id: ++msgId, role: 'assistant', loading: true, answer: '' };
     setMessages(prev => [...prev, userMsg, loadingMsg]);
-    setLoadedSessionId(null); // new message means this is no longer the saved session as-is
     setLoading(true);
 
     const t0 = Date.now();
+    const sid = sessionIdRef.current;
+
     try {
       await queryRAGStream(
         question, topK, sourceFilter, mode,
@@ -103,15 +117,21 @@ export default function App() {
               : m
           ));
         },
-        // onDone — merge final metadata
+        // onDone — merge final metadata then auto-save
         (result) => {
           const elapsed   = ((Date.now() - t0) / 1000).toFixed(1);
           const timestamp = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-          setMessages(prev => prev.map(m =>
-            m.id === loadingMsg.id
-              ? { ...m, loading: false, ...result, elapsed, timestamp }
-              : m
-          ));
+          setMessages(prev => {
+            const updated = prev.map(m =>
+              m.id === loadingMsg.id
+                ? { ...m, loading: false, ...result, elapsed, timestamp }
+                : m
+            );
+            // Auto-save every time a response completes so a page refresh
+            // never loses the conversation.
+            persistSession(updated, sid);
+            return updated;
+          });
         },
       );
     } catch (err) {

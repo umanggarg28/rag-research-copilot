@@ -152,8 +152,9 @@ class RetrievalService:
                 "score": similarity,
             })
 
-        # If the best match doesn't clear the threshold, the query is out-of-domain
-        if relevance_threshold > 0 and output:
+        # If the best match doesn't clear the threshold, the query is out-of-domain.
+        # Skip threshold when source_filter is set — user explicitly chose a document.
+        if relevance_threshold > 0 and not source_filter and output:
             if output[0]["score"] < relevance_threshold:
                 return []
 
@@ -206,7 +207,11 @@ class RetrievalService:
         # return spurious matches for common words (e.g. "US", "conflict") even in
         # completely unrelated documents, so we must gate on semantic score first.
         semantic = self._semantic_search(query, top_k=top_k * 2, source_filter=source_filter)
-        if relevance_threshold > 0:
+        # Only apply relevance threshold when no source filter is set.
+        # If the user explicitly filtered to a document, they want results from it
+        # regardless of how the query phrasing scores (e.g. "summarize this paper"
+        # has low cosine similarity to any specific chunk but is a valid request).
+        if relevance_threshold > 0 and not source_filter:
             if not semantic or semantic[0]["score"] < relevance_threshold:
                 return []
 

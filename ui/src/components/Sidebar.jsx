@@ -12,7 +12,7 @@ function timeAgo(iso) {
 }
 
 const THEME_ICONS = {
-  auto: (
+  light: (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
     </svg>
@@ -20,11 +20,6 @@ const THEME_ICONS = {
   dark: (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </svg>
-  ),
-  light: (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
     </svg>
   ),
 };
@@ -82,14 +77,6 @@ export default function Sidebar({
   if (collapsed) {
     return (
       <aside style={s.sidebarCollapsed} aria-label="Sidebar (collapsed)" data-collapsed="true">
-        {/* Brand icon */}
-        <div style={s.collapsedBrand} title="Research Copilot">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-        </div>
-
         {/* Upload icon */}
         <label style={s.collapsedBtn} title="Upload PDF" aria-label="Upload PDF">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -119,17 +106,17 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* Theme toggle */}
-        <button style={s.collapseBtn} onClick={onToggleTheme} title={`Theme: ${theme}`} aria-label={`Toggle theme (current: ${theme})`}>
-          {THEME_ICONS[theme]}
-        </button>
-
-        {/* Expand button */}
-        <button style={s.collapseBtn} onClick={onToggleCollapse} title="Expand sidebar" aria-label="Expand sidebar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-        </button>
+        {/* Bottom group: theme + expand */}
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, paddingBottom: 10 }}>
+          <button style={s.collapseBtn} onClick={onToggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+            {THEME_ICONS[theme === 'light' ? 'dark' : 'light']}
+          </button>
+          <button style={s.collapseBtn} onClick={onToggleCollapse} title="Expand sidebar" aria-label="Expand sidebar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </button>
+        </div>
       </aside>
     );
   }
@@ -140,14 +127,9 @@ export default function Sidebar({
 
       {/* Brand */}
       <div style={s.brand}>
-        <div style={s.brandLogo}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-        </div>
         <div style={{ flex: 1 }}>
-          <div style={s.brandTitle}>Research Copilot</div>
+          <div style={s.brandSuperscript}>Research</div>
+          <div style={s.brandTitle}>Copilot</div>
         </div>
         <button style={s.collapseExpandBtn} onClick={onToggleCollapse} title="Collapse sidebar" aria-label="Collapse sidebar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -231,14 +213,13 @@ export default function Sidebar({
                 role="button" aria-pressed={sourceFilter === doc.source} tabIndex={0}
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onFilterChange(sourceFilter === doc.source ? null : doc.source); }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={sourceFilter === doc.source ? 'var(--accent)' : 'var(--text-faint)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: sourceFilter === doc.source ? 1 : 0.7 }}>
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                 </svg>
                 <div style={s.docInfo}>
-                  <span style={s.docName}>{doc.source}</span>
+                  <span style={{ ...s.docName, ...(sourceFilter === doc.source ? s.docNameActive : {}) }}>{doc.source}</span>
                   <span style={s.docMeta}>{doc.chunks} chunks</span>
                 </div>
-                {sourceFilter === doc.source && <span style={s.activeRing} />}
                 {confirmDelete === doc.source ? (
                   <div style={s.confirmRow} onClick={e => e.stopPropagation()}>
                     <button style={s.confirmYes} onClick={() => handleDelete(doc.source)}>Remove</button>
@@ -301,9 +282,9 @@ export default function Sidebar({
 
       {/* Theme toggle footer */}
       <div style={s.themeFooter}>
-        <button style={s.themeBtn} onClick={onToggleTheme} aria-label={`Toggle theme (current: ${theme})`} title={`Theme: ${theme}`}>
-          {THEME_ICONS[theme]}
-          <span style={{ textTransform: 'capitalize' }}>{theme === 'auto' ? 'System' : theme}</span>
+        <button style={s.themeBtn} onClick={onToggleTheme} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+          {THEME_ICONS[theme === 'light' ? 'dark' : 'light']}
+          <span style={{ textTransform: 'capitalize' }}>{theme === 'light' ? 'Dark' : 'Light'}</span>
         </button>
       </div>
     </aside>
@@ -329,29 +310,27 @@ const s = {
   },
   brandLogo: {
     width: 34, height: 34, flexShrink: 0,
-    background: 'var(--accent-glow)', border: '1px solid var(--accent-border)',
-    borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
-  brandTitle: { fontSize: 14, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' },
-  brandSub:   { fontSize: 11, color: 'var(--text-faint)', marginTop: 1 },
+  brandSuperscript: { fontSize: 11, fontWeight: 500, color: 'var(--text-faint)', letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 1.2 },
+  brandTitle: { fontSize: 22, fontWeight: 400, color: 'var(--accent)', letterSpacing: '-0.02em', fontFamily: '"Anthropic Serif", Georgia, serif', lineHeight: 1.1 },
   collapseExpandBtn: {
     background: 'none', border: '1px solid var(--border-dim)', borderRadius: 'var(--r-sm)',
     color: 'var(--text-faint)', cursor: 'pointer', padding: '4px 5px',
     display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'border-color 0.15s, color 0.15s',
   },
 
-  uploadZone: { padding: '12px 12px 12px' },
+  uploadZone: { padding: '12px 12px 16px' },
   uploadBtn: {
-    width: '100%', padding: '9px 0',
-    background: 'var(--accent)',
-    color: '#fff', border: 'none', borderRadius: 'var(--r-md)',
-    fontSize: 13, fontWeight: 600, cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(217,119,87,0.25)', transition: 'all 0.15s',
+    width: '100%', padding: '8px 0',
+    background: 'transparent',
+    color: 'var(--text-dim)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)',
+    fontSize: 13, fontWeight: 500, cursor: 'pointer',
+    transition: 'all 0.15s',
     display: 'block', textAlign: 'center',
   },
   uploadBtnDrag: {
-    background: 'var(--bg-surface)', border: '2px dashed var(--accent)',
-    boxShadow: '0 0 0 3px var(--accent-glow)', color: 'var(--accent)',
+    background: 'var(--bg-surface)', border: '1.5px dashed var(--border)',
   },
   uploadBtnDisabled: { opacity: 0.65, cursor: 'not-allowed', pointerEvents: 'none' },
   uploadingRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 },
@@ -364,35 +343,37 @@ const s = {
   error:      { color: 'var(--red)', fontSize: 12, marginTop: 8, textAlign: 'center' },
 
   docsSection: { display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '4px 0' },
-  sectionHeader: { display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px' },
+  sectionHeader: { display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px 6px' },
   sectionLabel:  { fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' },
   sectionCount:  {
     fontSize: 11, background: 'var(--bg-input)', color: 'var(--text-dim)',
     borderRadius: 20, padding: '0 6px', fontWeight: 600,
+    border: '1px solid var(--border-dim)',
   },
   filterPill: {
     marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, fontSize: 11,
-    color: 'var(--accent)', background: 'var(--accent-glow)', border: '1px solid var(--accent-border)',
+    color: 'var(--text-dim)', background: 'var(--bg-surface)', border: '1px solid var(--border)',
     borderRadius: 20, padding: '2px 8px',
   },
   filterClear: {
-    background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer',
+    background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer',
     padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center',
   },
   docList: { overflowY: 'auto', padding: '0 8px', flex: 1, minHeight: 60 },
   docItem: {
     display: 'flex', alignItems: 'center', gap: 8,
     padding: '7px 10px', borderRadius: 'var(--r-md)', cursor: 'pointer',
-    marginBottom: 2, transition: 'background 0.15s', border: '1px solid transparent', position: 'relative',
+    marginBottom: 2, transition: 'background 0.15s', border: '1px solid transparent',
+    borderLeft: '2px solid transparent', position: 'relative',
   },
-  docActive: { background: 'var(--bg-surface)', border: '1px solid var(--accent-border)' },
+  docActive: { background: 'var(--bg-surface)', border: '1px solid transparent', borderLeft: '2px solid var(--accent)' },
   docInfo:   { flex: 1, overflow: 'hidden' },
   docName: {
-    display: 'block', fontSize: 13, color: 'var(--text)', fontWeight: 500,
-    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+    display: 'block', fontSize: 13, color: 'var(--text-dim)', fontWeight: 400,
+    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.01em',
   },
-  docMeta: { fontSize: 11, color: 'var(--text-dim)' },
-  activeRing: { display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 },
+  docNameActive: { color: 'var(--accent)', fontWeight: 500 },
+  docMeta: { fontSize: 11, color: 'var(--text-faint)' },
   deleteBtn: {
     background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer',
     padding: 3, flexShrink: 0, display: 'flex', alignItems: 'center', borderRadius: 'var(--r-sm)',
@@ -433,9 +414,9 @@ const s = {
   themeFooter: { padding: '8px 12px', borderTop: '1px solid var(--border)', marginTop: 'auto' },
   themeBtn: {
     display: 'flex', alignItems: 'center', gap: 7,
-    background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',
-    color: 'var(--text-faint)', fontSize: 12, cursor: 'pointer', padding: '5px 10px',
-    fontFamily: 'inherit', transition: 'border-color 0.15s, color 0.15s', width: '100%',
+    background: 'none', border: 'none',
+    color: 'var(--text-faint)', fontSize: 12, cursor: 'pointer', padding: '5px 2px',
+    fontFamily: 'inherit', transition: 'color 0.15s', width: '100%',
   },
 
   /* ── Collapsed ── */
@@ -448,8 +429,8 @@ const s = {
     overflow: 'hidden',
   },
   collapsedBrand: {
-    width: 34, height: 34, background: 'var(--accent-glow)', border: '1px solid var(--accent-border)',
-    borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: 34, height: 34,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
     marginBottom: 4, cursor: 'default',
   },
   collapsedBtn: {
@@ -467,9 +448,8 @@ const s = {
     fontSize: 9, fontWeight: 700, padding: '1px 4px', lineHeight: 1.4,
   },
   collapseBtn: {
-    marginTop: 'auto', marginBottom: 10,
-    width: 36, height: 32, background: 'var(--bg-surface)', border: '1px solid var(--border)',
+    width: 36, height: 32, background: 'none', border: 'none',
     borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', color: 'var(--text-dim)', transition: 'border-color 0.15s',
+    cursor: 'pointer', color: 'var(--text-faint)', transition: 'color 0.15s',
   },
 };

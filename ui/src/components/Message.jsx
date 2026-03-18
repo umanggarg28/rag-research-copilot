@@ -236,7 +236,7 @@ export default function Message({ msg }) {
             <div style={s.divider} />
             <button
               className="toggle-btn"
-              style={s.toggleBtn}
+              style={{ ...s.toggleBtn, ...(showChunks ? s.toggleBtnActive : {}) }}
               onClick={() => setShowChunks(v => !v)}
               aria-expanded={showChunks}
               aria-label={`${showChunks ? 'Hide' : 'Show'} source passages`}
@@ -375,7 +375,8 @@ const s = {
   citPage: { fontSize: 11, fontWeight: 700, flexShrink: 0 },
 
   toggleBtn: {
-    background: 'var(--bg-input)',
+    alignSelf: 'flex-start',
+    background: 'transparent',
     border: '1px solid var(--border)',
     borderRadius: 20,
     color: 'var(--text-dim)',
@@ -383,24 +384,32 @@ const s = {
     fontWeight: 500,
     cursor: 'pointer',
     padding: '4px 12px',
-    textAlign: 'left',
     fontFamily: 'inherit',
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
     transition: 'border-color 0.15s, color 0.15s, background 0.15s',
     letterSpacing: '0.01em',
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    outline: 'none',
   },
-  chunksList: { marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 },
+  toggleBtnActive: {
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--accent)',
+    color: 'var(--accent)',
+  },
+  chunksList: { marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8, animation: 'fadeUp 0.15s ease forwards' },
   chunk: {
     background: 'var(--bg-input)',
     borderRadius: 'var(--r-md)',
     padding: '10px 12px',
     border: '1px solid var(--border-dim)',
+    borderLeft: '3px solid transparent',
   },
   chunkMeta: {
     fontSize: 11,
-    color: 'var(--accent)',
+    color: 'var(--text-faint)',
     marginBottom: 6,
     display: 'flex',
     justifyContent: 'space-between',
@@ -409,8 +418,8 @@ const s = {
   chunkText: { fontSize: 12.5, color: 'var(--text-dim)', lineHeight: 1.65 },
   chunkHighlighted: {
     borderLeft: '3px solid var(--accent)',
-    background: 'var(--accent-glow)',
-    borderColor: 'var(--accent-border)',
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border)',
   },
 
   footer: {

@@ -157,7 +157,7 @@ class IngestionService:
 
         # ── Stage 4: Store in ChromaDB ───────────────────────────────────────
         print(f"[4/4] Storing in ChromaDB...")
-        new_chunks = self._store_in_chroma(chunks, embeddings, source_name, path.name)
+        new_chunks = self._store_in_chroma(chunks, embeddings, source_name, path.name, full_text)
         print(f"          → Stored {len(new_chunks)} chunks")
 
         # ── Update BM25 index ────────────────────────────────────────────────
@@ -186,6 +186,7 @@ class IngestionService:
         embeddings: list[list[float]],
         source_name: str,
         filename: str,
+        full_text: str,
     ) -> list[dict]:
         """
         Upsert chunks and their vectors into ChromaDB with metadata.
@@ -197,16 +198,48 @@ class IngestionService:
 
         We use upsert (not insert) so re-ingesting the same paper is safe.
         The ID is a hash of source + chunk index, so same paper = same IDs.
+
+        Page attribution:
+          We find each chunk's starting character position in the full text,
+          then look up which [Page N] marker precedes it. This is more reliable
+          than scanning for markers inside the chunk itself — a chunk spanning
+          a page boundary would otherwise pick up the *next* page's marker.
         """
         import re
+
+        # Build a sorted list of (char_position, page_number) for every marker
+        page_positions = [
+            (m.start(), int(m.group(1)))
+            for m in re.finditer(r"\[Page (\d+)\]", full_text)
+        ]
+
+        def page_at(pos: int) -> int:
+            """Return the page number whose [Page N] marker most recently
+            precedes character position `pos` in the full text."""
+            result = 0
+            for marker_pos, page_num in page_positions:
+                if marker_pos <= pos:
+                    result = page_num
+                else:
+                    break
+            return result
+
         ids, metadatas, stored_chunks = [], [], []
+        # cursor advances so that duplicate text earlier in the doc can't
+        # steal a later chunk's position
+        cursor = 0
 
         for i, chunk in enumerate(chunks):
             chunk_id = hashlib.md5(f"{source_name}::{i}".encode()).hexdigest()
 
-            # Extract [Page N] marker if present in chunk
-            match = re.search(r"\[Page (\d+)\]", chunk)
-            page_num = int(match.group(1)) if match else 0
+            # Anchor on first 80 chars — unique enough, short enough to be fast
+            anchor = chunk[:80]
+            pos = full_text.find(anchor, cursor)
+            if pos == -1:
+                pos = full_text.find(anchor)   # fallback: search full text
+            page_num = page_at(pos) if pos != -1 else 0
+            if pos != -1:
+                cursor = pos + 1  # next chunk must start after this position
 
             ids.append(chunk_id)
             metadatas.append({

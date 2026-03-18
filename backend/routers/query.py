@@ -36,6 +36,14 @@ from backend.services.ingestion import IngestionService
 
 router = APIRouter(tags=["Query"])
 
+# Queries that need broad document coverage rather than pinpoint retrieval
+_SUMMARY_KEYWORDS = {
+    "summarize", "summarise", "summary", "overview", "outline",
+    "what is this paper", "what is the paper", "what does this paper",
+    "what does the paper", "explain the paper", "describe the paper",
+    "tell me about", "what is this about", "what is it about",
+}
+
 _retrieval_service: RetrievalService = None
 _generation_service: GenerationService = None
 
@@ -85,18 +93,38 @@ async def query(
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
+    # Auto-increase top_k for summarization queries — they need broad coverage,
+    # not just the top 5 most similar chunks.
+    q_lower = request.question.lower()
+    is_summary_query = any(kw in q_lower for kw in _SUMMARY_KEYWORDS)
+    effective_top_k = max(request.top_k or 5, 15) if is_summary_query else request.top_k
+
     # Step 1: Retrieve relevant chunks (threshold=0.3 skips LLM for out-of-domain queries)
     results = retrieval.search(
         query=request.question,
-        top_k=request.top_k,
+        top_k=effective_top_k,
         source_filter=request.source_filter,
         mode=request.mode,
         relevance_threshold=0.3,
     )
 
     if not results:
+        # Peek at the actual best score so the user understands *why* nothing
+        # was returned — much more useful than a silent no-results message.
+        best = retrieval._semantic_search(
+            request.question, top_k=1, source_filter=None, relevance_threshold=0.0
+        )
+        if best:
+            best_score = best[0]["score"]
+            answer = (
+                f"No relevant content found. "
+                f"Best match score was **{best_score:.2f}** (threshold: 0.30). "
+                f"Try rephrasing your question or switching to **keyword** search mode."
+            )
+        else:
+            answer = "No documents have been uploaded yet. Upload a PDF to get started."
         return QueryResponse(
-            answer="No relevant content found in your uploaded papers for this question.",
+            answer=answer,
             citations=[],
             retrieved_chunks=[],
             model="none",
@@ -149,17 +177,34 @@ async def query_stream(
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
+    q_lower = request.question.lower()
+    is_summary_query = any(kw in q_lower for kw in _SUMMARY_KEYWORDS)
+    effective_top_k = max(request.top_k or 5, 15) if is_summary_query else request.top_k
+
     results = retrieval.search(
         query=request.question,
-        top_k=request.top_k,
+        top_k=effective_top_k,
         source_filter=request.source_filter,
         mode=request.mode,
         relevance_threshold=0.3,
     )
 
     if not results:
+        best = retrieval._semantic_search(
+            request.question, top_k=1, source_filter=None, relevance_threshold=0.0
+        )
+        if best:
+            best_score = best[0]["score"]
+            no_results_msg = (
+                f"No relevant content found. "
+                f"Best match score was **{best_score:.2f}** (threshold: 0.30). "
+                f"Try rephrasing your question or switching to **keyword** search mode."
+            )
+        else:
+            no_results_msg = "No documents have been uploaded yet. Upload a PDF to get started."
+
         async def no_docs():
-            yield f"data: {json.dumps({'type': 'text', 'content': 'No relevant content found in your uploaded papers for this question.'})}\n\n"
+            yield f"data: {json.dumps({'type': 'text', 'content': no_results_msg})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'citations': [], 'retrieved_chunks': [], 'model': 'none', 'tokens_used': {'input': 0, 'output': 0}})}\n\n"
         return StreamingResponse(no_docs(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

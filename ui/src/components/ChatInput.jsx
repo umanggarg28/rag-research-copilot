@@ -174,11 +174,10 @@ export default function ChatInput({ onSend, onClear, disabled, hasMessages, pend
         </button>
       </div>
 
-      <div style={s.hintRow}>
+      <div style={{ ...s.hintRow, opacity: focused || charCount > 50 ? 1 : 0, transition: 'opacity 0.2s' }}>
         <p style={s.hint}>
           <kbd style={s.kbd}>Enter</kbd> to send ·
-          <kbd style={s.kbd}>Shift+Enter</kbd> for newline ·
-          <kbd style={s.kbd}>⌘K</kbd> to focus
+          <kbd style={s.kbd}>Shift+Enter</kbd> for newline
         </p>
         {charCount > 50 && (
           <span style={{ ...s.charCount, color: charCount > 500 ? 'var(--amber)' : 'var(--text-faint)' }}>
@@ -211,13 +210,13 @@ const s = {
   },
   toolbarRight: { display: 'flex', alignItems: 'center', gap: 6 },
 
-  modeGroup: { display: 'flex', gap: 4 },
+  modeGroup: { display: 'flex', gap: 6 },
   modeBtn: {
     padding: '4px 12px',
     borderRadius: 20,
-    border: '1px solid var(--border)',
-    background: 'var(--bg-input)',
-    color: 'var(--text-dim)',
+    border: '1.5px solid transparent',
+    background: 'transparent',
+    color: 'var(--text-faint)',
     fontSize: 12,
     cursor: 'pointer',
     fontFamily: 'inherit',
@@ -225,9 +224,10 @@ const s = {
     transition: 'all 0.15s',
   },
   modeBtnActive: {
-    background: 'var(--bg)',
+    background: 'var(--bg-surface)',
     border: '1.5px solid var(--accent)',
     color: 'var(--accent)',
+    fontWeight: 600,
   },
 
   settingsBtn: {
@@ -283,11 +283,10 @@ const s = {
     border: '1px solid var(--border)',
     borderRadius: 'var(--r-lg)',
     padding: '10px 12px',
-    transition: 'border-color 0.15s, box-shadow 0.15s',
+    transition: 'border-color 0.15s',
   },
   boxFocused: {
-    borderColor: 'var(--accent)',
-    boxShadow: '0 0 0 3px var(--accent-glow)',
+    borderColor: 'var(--text-faint)',
   },
   textarea: {
     flex: 1,
@@ -302,8 +301,8 @@ const s = {
     minHeight: 26,
   },
   sendBtn: {
-    width: 34,
-    height: 34,
+    width: 30,
+    height: 30,
     borderRadius: '50%',
     background: 'var(--accent)',
     border: 'none',

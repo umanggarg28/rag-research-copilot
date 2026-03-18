@@ -3,9 +3,25 @@ import Message from './Message';
 
 export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
   const bottomRef = useRef();
+  const scrollRef = useRef();
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const lastMsg = messages[messages.length - 1];
+    const isStreaming = lastMsg?.loading;
+
+    if (isStreaming) {
+      // While streaming: only stay pinned if user hasn't scrolled up.
+      // "Near bottom" = within 120px of the bottom edge.
+      const el = scrollRef.current;
+      if (el) {
+        const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        if (distFromBottom > 120) return; // user scrolled up — respect it
+      }
+      bottomRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+    } else {
+      // New message added — always smooth-scroll to show it
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, [messages]);
 
   if (messages.length === 0) {
@@ -48,7 +64,7 @@ export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
   }
 
   return (
-    <div style={s.scrollOuter} role="log" aria-live="polite" aria-label="Chat messages">
+    <div ref={scrollRef} style={s.scrollOuter} role="log" aria-live="polite" aria-label="Chat messages">
       <div style={s.container}>
         {sourceFilter && (
           <div style={s.filterBanner}>
@@ -70,6 +86,7 @@ export default function ChatWindow({ messages, sourceFilter, onChipClick }) {
 const s = {
   scrollOuter: {
     flex: 1,
+    minHeight: 0,
     overflowY: 'auto',
     padding: '0 0 80px 0',
   },
@@ -82,8 +99,8 @@ const s = {
     flexDirection: 'column',
   },
   filterBanner: {
-    background: 'var(--accent-glow)',
-    border: '1px solid var(--accent-border)',
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border)',
     borderRadius: 'var(--r-md)',
     padding: '8px 14px',
     fontSize: 13,
@@ -95,6 +112,7 @@ const s = {
   },
   empty: {
     flex: 1,
+    minHeight: 0,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -113,8 +131,8 @@ const s = {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { fontSize: 28, fontWeight: 400, color: 'var(--text)', marginBottom: 10, fontFamily: '"Anthropic Serif", Georgia, serif', letterSpacing: '-0.02em' },
-  emptyDesc: { fontSize: 15, color: 'var(--text-dim)', lineHeight: 1.6, marginBottom: 28 },
+  emptyTitle: { fontSize: 28, fontWeight: 400, color: 'var(--text)', marginBottom: 14, fontFamily: '"Anthropic Serif", Georgia, serif', letterSpacing: '-0.02em' },
+  emptyDesc: { fontSize: 15, color: 'var(--text-faint)', lineHeight: 1.6, marginBottom: 28, maxWidth: '38ch', margin: '0 auto 28px' },
   examples: { display: 'flex', flexDirection: 'column', gap: 8 },
   exChip: {
     display: 'flex',
@@ -123,12 +141,12 @@ const s = {
     background: 'var(--bg-panel)',
     border: '1px solid var(--border)',
     borderRadius: 'var(--r-lg)',
-    padding: '13px 16px',
+    padding: '11px 16px',
     textAlign: 'left',
     cursor: 'pointer',
     width: '100%',
     fontFamily: 'inherit',
-    transition: 'background 0.12s, border-color 0.12s, transform 0.1s, box-shadow 0.1s',
+    transition: 'background 0.12s, border-color 0.12s',
   },
   exText: { fontSize: 14, color: 'var(--text)', lineHeight: 1.5, flex: 1 },
   exArrow: { flexShrink: 0, color: 'var(--text-faint)', opacity: 0.5 },
