@@ -1,6 +1,6 @@
 # AI Research Copilot — RAG System
 
-A production-grade Retrieval Augmented Generation (RAG) system for querying research papers.
+A Retrieval-Augmented Generation (RAG) system for querying research papers.
 Built from scratch with hybrid search, citation tracking, and a clean React UI.
 
 ---
@@ -46,7 +46,7 @@ rag-research-copilot/
 │   ├── embedder.py       # sentence-transformers wrapper
 │   └── bm25_search.py    # BM25 keyword search + RRF hybrid fusion
 ├── evaluation/           # RAG quality metrics (TODO)
-├── ui/                   # React frontend (TODO)
+├── ui/                   # React frontend
 ├── data/
 │   ├── papers/           # Drop PDFs here
 │   └── chroma/           # ChromaDB vector store (auto-created)
